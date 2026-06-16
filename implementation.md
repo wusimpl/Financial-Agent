@@ -80,7 +80,7 @@
 | 模块 | 主要职责 |
 | --- | --- |
 | API 路由模块 | 暴露股票搜索、自选股、个股概览、图表、SEC 文件、财务数据、社媒观点、页面聚合等接口。 |
-| Schema 模块 | 定义接口输入输出结构，保证后端返回字段稳定。 |
+| Schema 模块 | 定义接口输入输出结构，保证后端返回字段稳定。 ✅ |
 | 应用服务模块 | 编排多个数据源，完成业务规则、数据清洗、数据组装。 |
 | 数据源模块 | 对接行情、SEC、社媒等外部数据来源，只负责获取原始数据。 |
 | 解析与计算模块 | 处理技术指标、SEC 正文解析、财务字段映射、市场状态判断等纯逻辑。 |
@@ -102,39 +102,39 @@ API 层建议使用 FastAPI 的 `APIRouter` 函数，不强行设计 Controller 
 
 ### Schema 模块
 
-Schema 类只描述接口数据结构，不写业务逻辑。
+Schema 类只描述接口数据结构，不写业务逻辑。 ✅
 
 | 类 | 职责 |
 | --- | --- |
-| `StockIdentity` | 表示股票基础身份信息，包括股票代码、公司名称、公司标识、CIK 等。 |
-| `StockSearchItem` | 表示股票搜索结果中的单个条目。 |
-| `WatchlistItem` | 表示自选股列表中的单只股票，可复用 `StockIdentity` 并补充展示字段。 |
-| `QuoteSnapshot` | 表示最新报价，包括当前价格、涨跌额和涨跌幅。 |
-| `MarketStatus` | 表示交易状态，例如盘前、开盘、盘后、隔夜、休市。 |
-| `IntradaySummary` | 表示日内行情，包括开盘价、最高价、最低价和昨收价。 |
-| `VolumeSummary` | 表示成交数据，包括当前成交量和平均成交量。 |
-| `ValuationMetrics` | 表示估值指标，包括市值、市盈率、Beta、每股收益和目标价。 |
-| `FinancialCalendar` | 表示财务日历，目前主要包含下一次财报日期。 |
-| `DividendInfo` | 表示股息信息，包括下一次派息日、除息日和股息率。 |
-| `PriceRange52Week` | 表示 52 周价格区间。 |
-| `StockOverviewResponse` | 表示个股概览接口响应，组合报价、交易状态、估值、日历、股息等信息。 |
-| `ChartRange` | 表示图表时间范围枚举，包括 1D、5D、1M、3M、6M、YTD、1Y、5Y、All。 |
-| `ChartPoint` | 表示单个交易周期的数据点，包括开盘价、最高价、最低价、收盘价、成交量和技术指标。 |
-| `ChartResponse` | 表示图表接口响应，包括股票代码、时间范围和数据点列表。 |
-| `FilingFilter` | 表示 SEC 文件筛选条件，包括股票代码、年份和文件类型。 |
-| `FilingSummary` | 表示 SEC 文件列表中的单个文件摘要。 |
-| `FilingMetadata` | 表示 SEC 文件元信息，包括文件类型、报告期、公司名称、档案编号、注册地和雇主识别号。 |
-| `FilingSection` | 表示 SEC 文件中的关键章节，例如 Business、Risk Factors、MD&A。 |
-| `FilingDocumentResponse` | 表示 SEC 文件正文接口响应，包含元信息、可阅读正文和关键章节。 |
-| `FinancialSummary` | 表示最新一期财务摘要，包括净销售额、销售成本、毛利等核心数据。 |
-| `FinancialYear` | 表示单个年份的财务数据，包括收入、成本、毛利、营业利润、净利润和每股收益。 |
-| `FinancialHistoryResponse` | 表示多年历史财务数据响应。 |
-| `SocialSort` | 表示社媒排序方式，包括热门和最新。 |
-| `SocialAuthor` | 表示社媒作者信息，包括名称、账号和头像标识。 |
-| `SocialPost` | 表示单条社媒帖子，包括正文、发布时间、相对时间和互动数据。 |
-| `SocialPostsResponse` | 表示社媒帖子列表响应，最多返回 50 条。 |
-| `SourceState` | 表示单个数据来源的获取状态，包括是否成功、失败原因和更新时间。 |
-| `DashboardResponse` | 表示个股看板聚合响应，组合概览、图表、财务、社媒和数据来源状态。 |
+| `StockIdentity` | 表示股票基础身份信息，包括股票代码、公司名称、公司标识、CIK 等。 ✅ |
+| `StockSearchItem` | 表示股票搜索结果中的单个条目。 ✅ |
+| `WatchlistItem` | 表示自选股列表中的单只股票，可复用 `StockIdentity` 并补充展示字段。 ✅ |
+| `QuoteSnapshot` | 表示最新报价，包括当前价格、涨跌额和涨跌幅。 ✅ |
+| `MarketStatus` | 表示交易状态，例如盘前、开盘、盘后、隔夜、休市。 ✅ |
+| `IntradaySummary` | 表示日内行情，包括开盘价、最高价、最低价和昨收价。 ✅ |
+| `VolumeSummary` | 表示成交数据，包括当前成交量和平均成交量。 ✅ |
+| `ValuationMetrics` | 表示估值指标，包括市值、市盈率、Beta、每股收益和目标价。 ✅ |
+| `FinancialCalendar` | 表示财务日历，目前主要包含下一次财报日期。 ✅ |
+| `DividendInfo` | 表示股息信息，包括下一次派息日、除息日和股息率。 ✅ |
+| `PriceRange52Week` | 表示 52 周价格区间。 ✅ |
+| `StockOverviewResponse` | 表示个股概览接口响应，组合报价、交易状态、估值、日历、股息等信息。 ✅ |
+| `ChartRange` | 表示图表时间范围枚举，包括 1D、5D、1M、3M、6M、YTD、1Y、5Y、All。 ✅ |
+| `ChartPoint` | 表示单个交易周期的数据点，包括开盘价、最高价、最低价、收盘价、成交量和技术指标。 ✅ |
+| `ChartResponse` | 表示图表接口响应，包括股票代码、时间范围和数据点列表。 ✅ |
+| `FilingFilter` | 表示 SEC 文件筛选条件，包括股票代码、年份和文件类型。 ✅ |
+| `FilingSummary` | 表示 SEC 文件列表中的单个文件摘要。 ✅ |
+| `FilingMetadata` | 表示 SEC 文件元信息，包括文件类型、报告期、公司名称、档案编号、注册地和雇主识别号。 ✅ |
+| `FilingSection` | 表示 SEC 文件中的关键章节，例如 Business、Risk Factors、MD&A。 ✅ |
+| `FilingDocumentResponse` | 表示 SEC 文件正文接口响应，包含元信息、可阅读正文和关键章节。 ✅ |
+| `FinancialSummary` | 表示最新一期财务摘要，包括净销售额、销售成本、毛利等核心数据。 ✅ |
+| `FinancialYear` | 表示单个年份的财务数据，包括收入、成本、毛利、营业利润、净利润和每股收益。 ✅ |
+| `FinancialHistoryResponse` | 表示多年历史财务数据响应。 ✅ |
+| `SocialSort` | 表示社媒排序方式，包括热门和最新。 ✅ |
+| `SocialAuthor` | 表示社媒作者信息，包括名称、账号和头像标识。 ✅ |
+| `SocialPost` | 表示单条社媒帖子，包括正文、发布时间、相对时间和互动数据。 ✅ |
+| `SocialPostsResponse` | 表示社媒帖子列表响应，最多返回 50 条。 ✅ |
+| `SourceState` | 表示单个数据来源的获取状态，包括是否成功、失败原因和更新时间。 ✅ |
+| `DashboardResponse` | 表示个股看板聚合响应，组合概览、图表、财务、社媒和数据来源状态。 ✅ |
 
 ### 应用服务模块
 
