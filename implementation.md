@@ -83,7 +83,7 @@
 | Schema 模块 | 定义接口输入输出结构，保证后端返回字段稳定。 ✅ |
 | 应用服务模块 | 编排多个数据源，完成业务规则、数据清洗、数据组装。 |
 | 数据源模块 | 对接行情、SEC、社媒等外部数据来源，只负责获取原始数据。 |
-| 解析与计算模块 | 处理技术指标、SEC 正文解析、财务字段映射、市场状态判断等纯逻辑。 |
+| 解析与计算模块 | 处理技术指标、SEC 正文解析、财务字段映射、市场状态判断等纯逻辑。 ✅ |
 | 存储与缓存模块 | 管理单用户自选股、本地缓存和配置。 |
 | 错误与状态模块 | 统一错误类型，并为页面聚合接口生成数据来源状态。 |
 
@@ -165,20 +165,20 @@ Schema 类只描述接口数据结构，不写业务逻辑。 ✅
 
 ### 解析与计算模块
 
-这些类只处理确定性的转换、解析和计算，不直接请求外部数据。
+这些类只处理确定性的转换、解析和计算，不直接请求外部数据。 ✅
 
 | 类 | 职责 |
 | --- | --- |
-| `TickerNormalizer` | 统一股票代码格式，去空格、转大写，并校验空值。 |
-| `MarketStatusResolver` | 根据交易所时间、交易日和当前时间判断盘前、开盘、盘后、隔夜、休市等状态。 |
-| `ChartRangeMapper` | 把前端时间范围转换成底层行情需要的周期和数量，例如 1D 对应分钟级数据，1Y 对应日线数据。 |
-| `TechnicalIndicatorCalculator` | 计算 MA20、MA50、MA200、RSI(14)、MACD、信号线和柱状值。 |
-| `SecDocumentParser` | 清理 SEC HTML 或文本正文，生成可阅读正文。 |
-| `SecSectionExtractor` | 从 SEC 正文中提取 Business、Risk Factors、MD&A 等关键章节。 |
-| `SecMetadataMapper` | 从 SEC submissions 和 company facts 中整理文件类型、报告期、公司名称、档案编号、注册地和雇主识别号。 |
-| `FinancialFactsMapper` | 把 SEC XBRL 标签映射到业务字段，例如净销售额、销售成本、毛利、营业利润、净利润和每股收益。 |
-| `FinancialMetricCalculator` | 计算毛利率、收入增长等从原始财务数据派生出来的指标。当前需求未要求的指标不应提前返回。 |
-| `SocialPostNormalizer` | 统一社媒帖子结构，整理作者、账号、头像标识、发布时间、相对时间和互动数据。 |
+| `TickerNormalizer` | 统一股票代码格式，去空格、转大写，并校验空值。 ✅ |
+| `MarketStatusResolver` | 根据交易所时间、交易日和当前时间判断盘前、开盘、盘后、隔夜、休市等状态。 ✅ |
+| `ChartRangeMapper` | 把前端时间范围转换成底层行情需要的周期和数量，例如 1D 对应分钟级数据，1Y 对应日线数据。 ✅ |
+| `TechnicalIndicatorCalculator` | 计算 MA20、MA50、MA200、RSI(14)、MACD、信号线和柱状值。 ✅ |
+| `SecDocumentParser` | 清理 SEC HTML 或文本正文，生成可阅读正文。 ✅ |
+| `SecSectionExtractor` | 从 SEC 正文中提取 Business、Risk Factors、MD&A 等关键章节。 ✅ |
+| `SecMetadataMapper` | 从 SEC submissions 和 company facts 中整理文件类型、报告期、公司名称、档案编号、注册地和雇主识别号。 ✅ |
+| `FinancialFactsMapper` | 把 SEC XBRL 标签映射到业务字段，例如净销售额、销售成本、毛利、营业利润、净利润和每股收益。 ✅ |
+| `FinancialMetricCalculator` | 计算毛利率、收入增长等从原始财务数据派生出来的指标。当前需求未要求的指标不应提前返回。 ✅ |
+| `SocialPostNormalizer` | 统一社媒帖子结构，整理作者、账号、头像标识、发布时间、相对时间和互动数据。 ✅ |
 
 ### 存储与缓存模块
 
