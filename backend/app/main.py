@@ -1,13 +1,23 @@
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import JSONResponse
 
+from app.api import charts, dashboard, financials, sec, social, stocks
+from app.errors import AppError
+from app.schemas import ApiErrorResponse
 from app.sources.errors import SourceError
 from app.sources.market import MarketSource
 from app.sources.sec import SecFilingsSource
 from app.sources.twitter import TwitterSource
 
 app = FastAPI(title="Financial Agent Backend")
+app.include_router(stocks.router)
+app.include_router(charts.router)
+app.include_router(sec.router)
+app.include_router(financials.router)
+app.include_router(social.router)
+app.include_router(dashboard.router)
 
 sec_source = SecFilingsSource()
 market_source = MarketSource()
@@ -17,6 +27,23 @@ twitter_source = TwitterSource()
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.exception_handler(AppError)
+async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
+    return JSONResponse(status_code=exc.status_code, content=exc.response().model_dump())
+
+
+@app.exception_handler(SourceError)
+async def source_error_handler(request: Request, exc: SourceError) -> JSONResponse:
+    response = ApiErrorResponse(error="source_error", message=str(exc))
+    return JSONResponse(status_code=502, content=response.model_dump())
+
+
+@app.exception_handler(ValueError)
+async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse:
+    response = ApiErrorResponse(error="bad_request", message=str(exc))
+    return JSONResponse(status_code=400, content=response.model_dump())
 
 
 @app.get("/sources/sec/{ticker}/company")

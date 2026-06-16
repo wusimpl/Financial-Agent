@@ -53,7 +53,7 @@ def test_sec_document_parser_and_section_extractor():
     document = """
     <html><body><h1>Item 1. Business</h1><p>We build products.</p>
     <h1>Item 1A. Risk Factors</h1><p>Demand may change.</p>
-    <h1>Item 7. Management's Discussion and Analysis</h1><p>Revenue increased.</p></body></html>
+    <h1>Item 7. Management’s Discussion and Analysis</h1><p>Revenue increased.</p></body></html>
     """
 
     text = SecDocumentParser().parse(document)

@@ -30,7 +30,7 @@ class SecSectionExtractor:
         (
             "management_discussion",
             "Management Discussion and Analysis",
-            re.compile(r"\bitem\s+7\.?\s+management'?s?\s+discussion\s+and\s+analysis\b", re.IGNORECASE),
+            re.compile(r"\bitem\s+7\.?\s+management['’]?s?\s+discussion\s+and\s+analysis\b", re.IGNORECASE),
         ),
     ]
     next_item_pattern = re.compile(r"\bitem\s+\d+[a-z]?\.?\s+", re.IGNORECASE)
