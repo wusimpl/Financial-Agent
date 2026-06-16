@@ -31,6 +31,10 @@ class SecFilingsSource:
     def company_index(self) -> list[dict[str, Any]]:
         return self._company_index()
 
+    def company_submissions(self, ticker_or_company: str | dict[str, Any]) -> dict[str, Any]:
+        company = ticker_or_company if isinstance(ticker_or_company, dict) else self.find_company(ticker_or_company)
+        return self._submissions(company)
+
     def list_filings(
         self,
         ticker: str,

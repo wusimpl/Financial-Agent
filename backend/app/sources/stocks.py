@@ -46,7 +46,7 @@ class MarketProfileSource:
     cookie_url = "https://fc.yahoo.com"
     quote_summary_url = (
         "https://query2.finance.yahoo.com/v10/finance/quoteSummary/{ticker}"
-        "?modules=price,summaryDetail,defaultKeyStatistics,calendarEvents&crumb={crumb}"
+        "?modules=price,summaryDetail,defaultKeyStatistics,financialData,calendarEvents&crumb={crumb}"
     )
 
     def __init__(self, settings: Settings | None = None, cache: FileCache | None = None) -> None:
