@@ -23,10 +23,13 @@ class SecFilingsSource:
 
     def find_company(self, ticker: str) -> dict[str, Any]:
         normalized = self._normalize_ticker(ticker)
-        for company in self._company_index():
+        for company in self.company_index():
             if company["ticker"] == normalized:
                 return company
         raise SourceError(f"未找到美股代码：{normalized}")
+
+    def company_index(self) -> list[dict[str, Any]]:
+        return self._company_index()
 
     def list_filings(
         self,
