@@ -7,16 +7,18 @@ import { SocialPanel } from './components/SocialPanel';
 import { MarketStatusIndicator } from './components/MarketStatusIndicator';
 import { api, ApiError } from './api/client';
 import { adaptDashboard } from './api/adapters';
-import { mockStocks } from './mockData';
 import { cn } from './lib/utils';
 import { formatCurrency, formatNumber, hasNumber } from './lib/format';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import type { StockData } from './types';
+import type { WatchlistItem } from './api/backendTypes';
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeStock, setActiveStock] = useState('AAPL');
-  const [watchlist, setWatchlist] = useState(['AAPL', 'TSLA', 'MSFT']);
+  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
+  const [watchlistLoading, setWatchlistLoading] = useState(true);
+  const [watchlistError, setWatchlistError] = useState<string | null>(null);
   const [stockData, setStockData] = useState<StockData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -24,6 +26,30 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    setWatchlistLoading(true);
+    setWatchlistError(null);
+
+    api.watchlist()
+      .then((items) => {
+        if (!cancelled) setWatchlist(items);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setWatchlistError(error instanceof ApiError ? error.message : 'Unable to load watchlist.');
+        setWatchlist([]);
+      })
+      .finally(() => {
+        if (!cancelled) setWatchlistLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -61,9 +87,10 @@ export default function App() {
       <div className="flex flex-1 overflow-hidden">
         <Sidebar 
           watchlist={watchlist}
+          isLoading={watchlistLoading}
+          error={watchlistError}
           activeStock={activeStock}
           setActiveStock={setActiveStock}
-          stocksMap={mockStocks}
         />
 
         <main className="flex-1 overflow-x-auto overflow-y-hidden flex flex-col">

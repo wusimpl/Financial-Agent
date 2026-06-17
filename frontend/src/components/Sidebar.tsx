@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { StockData } from '../types';
 import { cn } from '../lib/utils';
 import { ChevronLeft, Menu } from 'lucide-react';
+import type { WatchlistItem } from '../api/backendTypes';
 
 interface SidebarProps {
-  watchlist: string[];
+  watchlist: WatchlistItem[];
+  isLoading?: boolean;
+  error?: string | null;
   activeStock: string;
   setActiveStock: (ticker: string) => void;
-  stocksMap: Record<string, StockData>;
 }
 
 function CompanyLogo({ ticker, name }: { ticker: string; name: string }) {
@@ -37,7 +38,7 @@ function CompanyLogo({ ticker, name }: { ticker: string; name: string }) {
   );
 }
 
-export function Sidebar({ watchlist, activeStock, setActiveStock, stocksMap }: SidebarProps) {
+export function Sidebar({ watchlist, isLoading, error, activeStock, setActiveStock }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
@@ -55,9 +56,24 @@ export function Sidebar({ watchlist, activeStock, setActiveStock, stocksMap }: S
         </button>
       </div>
       <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-        {watchlist.map((ticker) => {
-          const stock = stocksMap[ticker]?.info;
-          if (!stock) return null;
+        {isLoading && (
+          <div className={cn("px-4 py-3 text-xs text-slate-500", !isOpen && "sr-only")}>
+            Loading watchlist...
+          </div>
+        )}
+        {!isLoading && error && (
+          <div className={cn("px-4 py-3 text-xs text-red-600 dark:text-red-400", !isOpen && "sr-only")}>
+            {error}
+          </div>
+        )}
+        {!isLoading && !error && watchlist.length === 0 && (
+          <div className={cn("px-4 py-3 text-xs text-slate-500", !isOpen && "sr-only")}>
+            No stocks in watchlist.
+          </div>
+        )}
+        {!isLoading && !error && watchlist.map((item) => {
+          const ticker = item.identity.ticker;
+          const name = item.identity.company_name;
           
           const isActive = activeStock === ticker;
           
@@ -70,14 +86,14 @@ export function Sidebar({ watchlist, activeStock, setActiveStock, stocksMap }: S
                 isOpen ? "px-4" : "px-0 justify-center",
                 isActive ? "bg-white dark:bg-[#161B22] border-blue-500 shadow-sm dark:shadow-none" : "border-transparent hover:bg-slate-100 dark:hover:bg-[#161B22]"
               )}
-              title={!isOpen ? stock.name : undefined}
+              title={!isOpen ? name : undefined}
             >
-              <CompanyLogo ticker={ticker} name={stock.name} />
+              <CompanyLogo ticker={ticker} name={name} />
               
               {isOpen && (
                 <div className="flex flex-col items-start overflow-hidden flex-1">
-                  <div className="text-sm font-bold text-slate-900 dark:text-white uppercase">{stock.ticker}</div>
-                  <div className="text-[10px] text-slate-500 hover:text-slate-700 dark:hover:text-slate-400 truncate w-full">{stock.name}</div>
+                  <div className="text-sm font-bold text-slate-900 dark:text-white uppercase">{ticker}</div>
+                  <div className="text-[10px] text-slate-500 hover:text-slate-700 dark:hover:text-slate-400 truncate w-full">{name}</div>
                 </div>
               )}
             </button>
