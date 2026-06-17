@@ -1,6 +1,6 @@
 # Financial Agent
 
-当前阶段先建设后端数据源能力，并已合入一版前端外观布局稿。
+当前阶段已经接入前后端主链路，前端股票页面会读取后端真实数据。
 
 ## 目录
 
@@ -12,7 +12,7 @@ backend/
   data/cache/   # 本地缓存，不提交
   tests/
 
-frontend/       # 前端界面，当前使用本地示例数据
+frontend/       # 前端界面，读取后端股票、图表、SEC、财务和社媒数据
 ```
 
 ## 后端数据源
@@ -48,7 +48,7 @@ python3 -m pip install -e .
 uvicorn app.main:app --reload
 ```
 
-SEC 请求建议设置身份标识：
+SEC 请求需要设置身份标识，否则 SEC 可能拒绝请求：
 
 ```bash
 export FINANCIAL_AGENT_SEC_USER_AGENT="financial-agent your-email@example.com"
@@ -61,5 +61,3 @@ cd frontend
 npm install
 npm run dev
 ```
-
-前端当前只体现外观和布局，还没有接入后端接口。
