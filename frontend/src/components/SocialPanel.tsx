@@ -1,20 +1,41 @@
 import React from "react";
 import { StockData } from "../types";
-import type { SourceState } from "../api/backendTypes";
-import { Maximize2, Minimize2 } from "lucide-react";
-import { cn } from "../lib/utils";
+import type { SocialSort, SourceState } from "../api/backendTypes";
+import { Eye, Heart, Maximize2, MessageCircle, Minimize2, Repeat2 } from "lucide-react";
 
 export function SocialPanel({
   data,
   status,
+  sort,
+  isLoading,
+  error,
+  onSortChange,
   onExpand,
   isExpanded,
 }: {
   data: StockData;
   status?: SourceState;
+  sort?: SocialSort;
+  isLoading?: boolean;
+  error?: string | null;
+  onSortChange?: (sort: SocialSort) => void;
   onExpand?: () => void;
   isExpanded?: boolean;
 }) {
+  if (isLoading)
+    return (
+      <div className="p-6 text-slate-500 text-sm">
+        Loading social posts...
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="p-6 text-slate-500 text-sm">
+        {error}
+      </div>
+    );
+
   if (status && !status.ok)
     return (
       <div className="p-6 text-slate-500 text-sm">
@@ -36,9 +57,13 @@ export function SocialPanel({
           Social Points
         </h3>
         <div className="flex items-center gap-2">
-          <select className="text-[10px] bg-transparent border border-slate-300 dark:border-[#30363D] rounded px-1.5 py-0.5 outline-none text-slate-500 dark:text-slate-400">
-            <option>Trending</option>
-            <option>Latest</option>
+          <select
+            value={sort || "latest"}
+            onChange={(event) => onSortChange?.(event.target.value as SocialSort)}
+            className="text-[10px] bg-transparent border border-slate-300 dark:border-[#30363D] rounded px-1.5 py-0.5 outline-none text-slate-500 dark:text-slate-400"
+          >
+            <option value="hot">Trending</option>
+            <option value="latest">Latest</option>
           </select>
           {onExpand && (
             <button
@@ -81,15 +106,18 @@ export function SocialPanel({
                     {tweet.content}
                   </p>
 
-                  <div className="mt-4 flex items-center gap-6 text-slate-500 text-[10px] font-mono hover:text-slate-600 dark:hover:text-slate-400 cursor-pointer">
+                  <div className="mt-4 flex items-center gap-5 text-slate-500 text-[10px] font-mono hover:text-slate-600 dark:hover:text-slate-400 cursor-pointer">
                     <span className="flex items-center gap-1">
-                      💬 {tweet.replies}
+                      <MessageCircle size={12} /> {tweet.replies}
                     </span>
                     <span className="flex items-center gap-1 text-green-600 dark:text-green-500">
-                      ▲ {tweet.retweets}
+                      <Repeat2 size={12} /> {tweet.retweets}
                     </span>
                     <span className="flex items-center gap-1">
-                      ❤️ {tweet.likes}
+                      <Heart size={12} /> {tweet.likes}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Eye size={12} /> {tweet.views}
                     </span>
                   </div>
                 </div>

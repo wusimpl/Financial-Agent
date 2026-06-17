@@ -5,6 +5,7 @@ import type {
   FinancialHistoryResponse,
   MarketStatusValue,
   SocialPost,
+  SocialPostsResponse,
   StockOverviewResponse,
 } from './backendTypes';
 import type { ChartDataPoint, FinancialYear, StockData, StockInfo, Tweet } from '../types';
@@ -160,5 +161,12 @@ export function adaptChart(response: ChartResponse) {
   return {
     chart: response.points.filter(hasPricePoint).map(toChartPoint),
     chartRange: response.range,
+  };
+}
+
+export function adaptSocial(response: SocialPostsResponse) {
+  return {
+    tweets: response.items.map(toTweet),
+    socialSort: response.sort,
   };
 }

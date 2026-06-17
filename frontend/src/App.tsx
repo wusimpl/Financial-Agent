@@ -6,12 +6,12 @@ import { ChartPanel } from './components/ChartPanel';
 import { SocialPanel } from './components/SocialPanel';
 import { MarketStatusIndicator } from './components/MarketStatusIndicator';
 import { api, ApiError } from './api/client';
-import { adaptChart, adaptDashboard } from './api/adapters';
+import { adaptChart, adaptDashboard, adaptSocial } from './api/adapters';
 import { cn } from './lib/utils';
 import { formatCurrency, formatNumber, hasNumber } from './lib/format';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import type { StockData } from './types';
-import type { ChartRange, WatchlistItem } from './api/backendTypes';
+import type { ChartRange, SocialSort, WatchlistItem } from './api/backendTypes';
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -25,8 +25,12 @@ export default function App() {
   const [selectedChartRange, setSelectedChartRange] = useState<ChartRange>('1Y');
   const [chartLoading, setChartLoading] = useState(false);
   const [chartError, setChartError] = useState<string | null>(null);
+  const [selectedSocialSort, setSelectedSocialSort] = useState<SocialSort>('latest');
+  const [socialLoading, setSocialLoading] = useState(false);
+  const [socialError, setSocialError] = useState<string | null>(null);
   const [expandedPanel, setExpandedPanel] = useState<'financials' | 'chart' | 'social' | null>(null);
   const chartRequestId = useRef(0);
+  const socialRequestId = useRef(0);
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
@@ -64,13 +68,17 @@ export default function App() {
     setStockData(null);
     setChartLoading(false);
     setChartError(null);
+    setSocialLoading(false);
+    setSocialError(null);
     chartRequestId.current += 1;
+    socialRequestId.current += 1;
 
     api.dashboard(activeStock)
       .then((response) => {
         if (!cancelled) {
           setStockData(adaptDashboard(response));
           setSelectedChartRange(response.chart.range);
+          setSelectedSocialSort(response.social.sort);
         }
       })
       .catch((error) => {
@@ -109,6 +117,32 @@ export default function App() {
       })
       .finally(() => {
         if (requestId === chartRequestId.current) setChartLoading(false);
+      });
+  };
+
+  const loadSocialSort = (sort: SocialSort) => {
+    const requestId = socialRequestId.current + 1;
+    socialRequestId.current = requestId;
+    setSelectedSocialSort(sort);
+    setSocialLoading(true);
+    setSocialError(null);
+
+    api.socialPosts(activeStock, sort)
+      .then((response) => {
+        if (requestId !== socialRequestId.current) return;
+        const nextSocial = adaptSocial(response);
+        setStockData((current) => current ? {
+          ...current,
+          tweets: nextSocial.tweets,
+        } : current);
+        setSelectedSocialSort(nextSocial.socialSort);
+      })
+      .catch((error) => {
+        if (requestId !== socialRequestId.current) return;
+        setSocialError(error instanceof ApiError ? error.message : 'Unable to load social posts.');
+      })
+      .finally(() => {
+        if (requestId === socialRequestId.current) setSocialLoading(false);
       });
   };
 
@@ -224,6 +258,10 @@ export default function App() {
                       <SocialPanel 
                         data={stockData} 
                         status={stockData.sources?.social}
+                        sort={selectedSocialSort}
+                        isLoading={socialLoading}
+                        error={socialError}
+                        onSortChange={loadSocialSort}
                         isExpanded={expandedPanel === 'social'} 
                         onExpand={() => setExpandedPanel(expandedPanel === 'social' ? null : 'social')} 
                       />
