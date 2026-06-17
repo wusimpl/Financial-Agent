@@ -4,6 +4,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from app.core.env import load_env_file
+
 
 @dataclass(frozen=True)
 class CachePolicy:
@@ -33,6 +35,8 @@ class Settings:
 
 def get_settings() -> Settings:
     backend_root = Path(__file__).resolve().parents[2]
+    load_env_file(backend_root.parent / ".env")
+
     cache_dir = Path(os.getenv("FINANCIAL_AGENT_CACHE_DIR", backend_root / "data" / "cache"))
     watchlist_path = Path(os.getenv("FINANCIAL_AGENT_WATCHLIST_PATH", backend_root / "data" / "watchlist.json"))
     default_watchlist = tuple(
