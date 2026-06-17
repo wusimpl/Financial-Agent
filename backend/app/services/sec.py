@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import html
+import re
 from typing import Any
 
 from app.logic.sec import SecDocumentParser, SecMetadataMapper, SecSectionExtractor
@@ -64,6 +66,17 @@ class SecFilingService:
         raw = self.sec_source.filing_document(normalized, filing["accessionNumber"], filing["primaryDocument"])
         return self._document_response(normalized, result["company"], filing, raw["document"])
 
+    def document_html_by_year(
+        self,
+        ticker: str,
+        year: int,
+        filing_type: str = "10-K",
+        year_basis: str = "report",
+    ) -> str:
+        normalized = TickerNormalizer.normalize(ticker)
+        raw = self.sec_source.filing_document_by_year(normalized, year=year, form=filing_type, year_basis=year_basis)
+        return self._document_with_base(raw["document"], raw["url"])
+
     def _document_response(
         self,
         ticker: str,
@@ -98,3 +111,10 @@ class SecFilingService:
             primary_document=str(filing.get("primaryDocument") or ""),
             document_url=filing.get("documentUrl"),
         )
+
+    @staticmethod
+    def _document_with_base(document: str, url: str) -> str:
+        base = f'<base href="{html.escape(url, quote=True)}">'
+        if re.search(r"<head[\s>]", document, flags=re.IGNORECASE):
+            return re.sub(r"(<head[^>]*>)", rf"\1{base}", document, count=1, flags=re.IGNORECASE)
+        return f"{base}{document}"

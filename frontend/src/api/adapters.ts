@@ -156,10 +156,20 @@ export function adaptDashboard(response: DashboardResponse): StockData {
   };
 }
 
+export function adaptOverview(ticker: string, response: StockOverviewResponse): StockInfo {
+  return toStockInfo(ticker, response);
+}
+
 export function adaptChart(response: ChartResponse) {
   return {
     chart: response.points.filter(hasPricePoint).map(toChartPoint),
     chartRange: response.range,
+  };
+}
+
+export function adaptFinancialHistory(response: FinancialHistoryResponse) {
+  return {
+    financials: toFinancialYears(response),
   };
 }
 

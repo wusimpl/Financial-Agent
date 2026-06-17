@@ -5,8 +5,10 @@ import type {
   DashboardResponse,
   FilingDocumentResponse,
   FilingSummary,
+  FinancialHistoryResponse,
   SocialPostsResponse,
   SocialSort,
+  StockOverviewResponse,
   StockSearchItem,
   WatchlistItem,
 } from './backendTypes';
@@ -95,6 +97,10 @@ export const api = {
     return request<WatchlistItem[]>('/stocks/watchlist');
   },
 
+  stockOverview(ticker: string) {
+    return request<StockOverviewResponse>(`/stocks/${ticker}/overview`);
+  },
+
   searchStocks(query: string, limit = 10) {
     return request<StockSearchItem[]>('/stocks/search', { query, limit });
   },
@@ -110,11 +116,23 @@ export const api = {
     });
   },
 
-  secFilings(ticker: string, options?: { year?: number; filingType?: string }) {
+  secDocumentHtmlByYearUrl(ticker: string, year: number, filingType: string) {
+    return buildUrl(`/sec/${ticker}/document-html-by-year`, {
+      year,
+      type: filingType,
+    });
+  },
+
+  secFilings(ticker: string, options?: { year?: number; filingType?: string; limit?: number }) {
     return request<FilingSummary[]>(`/sec/${ticker}/filings`, {
       year: options?.year,
       type: options?.filingType,
+      limit: options?.limit,
     });
+  },
+
+  financialHistory(ticker: string) {
+    return request<FinancialHistoryResponse>(`/financials/${ticker}/history`);
   },
 
   socialPosts(ticker: string, sort: SocialSort) {

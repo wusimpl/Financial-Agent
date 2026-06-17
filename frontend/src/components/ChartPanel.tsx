@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { formatNumber, hasNumber } from "../lib/format";
+import { LoadingState } from "./LoadingState";
 
 export function ChartPanel({
   data,
@@ -37,25 +38,65 @@ export function ChartPanel({
 }) {
   const ranges: ChartRange[] = ["1D", "5D", "1M", "3M", "6M", "YTD", "1Y", "5Y", "All"];
 
+  const toolbar = (
+    <div className="h-14 px-4 border-b border-slate-200 dark:border-[#30363D] flex items-center justify-between bg-slate-50 dark:bg-[#11141A] shrink-0">
+      <div className="flex items-center gap-4">
+        <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tighter">
+          PRICE CHART
+        </h3>
+        <div className="flex gap-1 text-[10px] font-mono px-2">
+          <select
+            value={range || data.chartRange || "1Y"}
+            onChange={(event) => onRangeChange?.(event.target.value as ChartRange)}
+            className="bg-transparent border border-slate-300 dark:border-[#30363D] rounded px-1.5 py-0.5 outline-none text-slate-800 dark:text-slate-200 font-bold"
+          >
+            {ranges.map(
+              (chartRange) => (
+                <option key={chartRange} value={chartRange}>
+                  {chartRange}
+                </option>
+              ),
+            )}
+          </select>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 pr-2 text-slate-500 dark:text-slate-400">
+        <select className="bg-transparent text-[11px] outline-none hover:text-slate-800 dark:hover:text-slate-200">
+          <option>Basic</option>
+          <option>Advanced</option>
+        </select>
+        <div className="w-px h-4 bg-slate-200 dark:bg-[#30363D] mx-2"></div>
+        {onExpand && (
+          <button
+            onClick={onExpand}
+            className="p-1 hover:text-slate-900 dark:hover:text-white transition-colors"
+          >
+            {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  const panelState = (content: React.ReactNode) => (
+    <div className="flex flex-col h-full bg-white dark:bg-[#161B22] overflow-hidden transition-colors">
+      {toolbar}
+      <div className="flex-1 bg-slate-50 dark:bg-[#0B0E14]">{content}</div>
+    </div>
+  );
+
   if (isLoading)
-    return (
-      <div className="p-6 text-slate-500 text-sm">Loading chart...</div>
-    );
+    return panelState(<LoadingState label="Loading chart..." />);
 
   if (error)
-    return (
-      <div className="p-6 text-slate-500 text-sm">{error}</div>
-    );
+    return panelState(<div className="p-6 text-slate-500 text-sm">{error}</div>);
 
   if (status && !status.ok)
-    return (
-      <div className="p-6 text-slate-500 text-sm">Chart data could not be loaded.</div>
-    );
+    return panelState(<div className="p-6 text-slate-500 text-sm">Chart data could not be loaded.</div>);
 
   if (!data?.chart?.length)
-    return (
-      <div className="p-6 text-slate-500 text-sm">No chart data available.</div>
-    );
+    return panelState(<div className="p-6 text-slate-500 text-sm">No chart data available.</div>);
 
   const info = data.info;
 
@@ -121,45 +162,7 @@ export function ChartPanel({
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-[#161B22] overflow-hidden transition-colors">
-      {/* Chart Toolbar */}
-      <div className="h-14 px-4 border-b border-slate-200 dark:border-[#30363D] flex items-center justify-between bg-slate-50 dark:bg-[#11141A] shrink-0">
-        <div className="flex items-center gap-4">
-          <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tighter">
-            PRICE CHART
-          </h3>
-          <div className="flex gap-1 text-[10px] font-mono px-2">
-            <select
-              value={range || data.chartRange || "1Y"}
-              onChange={(event) => onRangeChange?.(event.target.value as ChartRange)}
-              className="bg-transparent border border-slate-300 dark:border-[#30363D] rounded px-1.5 py-0.5 outline-none text-slate-800 dark:text-slate-200 font-bold"
-            >
-              {ranges.map(
-                (chartRange) => (
-                  <option key={chartRange} value={chartRange}>
-                    {chartRange}
-                  </option>
-                ),
-              )}
-            </select>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 pr-2 text-slate-500 dark:text-slate-400">
-          <select className="bg-transparent text-[11px] outline-none hover:text-slate-800 dark:hover:text-slate-200">
-            <option>Basic</option>
-            <option>Advanced</option>
-          </select>
-          <div className="w-px h-4 bg-slate-200 dark:bg-[#30363D] mx-2"></div>
-          {onExpand && (
-            <button
-              onClick={onExpand}
-              className="p-1 hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-            </button>
-          )}
-        </div>
-      </div>
+      {toolbar}
 
       {/* Legend */}
       <div className="px-4 py-2 flex items-center gap-6 text-[10px] font-mono border-b border-slate-200 dark:border-[#30363D]/50 bg-slate-50 dark:bg-[#0B0E14]">

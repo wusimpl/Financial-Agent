@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Query
+from fastapi.responses import HTMLResponse
 
 from app.schemas import FilingDocumentResponse, FilingSummary
 from app.services.sec import SecFilingService
@@ -38,3 +39,13 @@ def document_by_year(
     year_basis: str = Query("report"),
 ) -> FilingDocumentResponse:
     return sec_service.document_by_year(ticker, year=year, filing_type=filing_type, year_basis=year_basis)
+
+
+@router.get("/{ticker}/document-html-by-year", response_class=HTMLResponse)
+def document_html_by_year(
+    ticker: str,
+    year: int = Query(..., ge=1900, le=2100),
+    filing_type: str = Query("10-K", alias="type"),
+    year_basis: str = Query("report"),
+) -> str:
+    return sec_service.document_html_by_year(ticker, year=year, filing_type=filing_type, year_basis=year_basis)

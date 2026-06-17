@@ -30,7 +30,7 @@ class FinancialFactsMapper:
         for field, tags in self.field_tags.items():
             for tag in tags:
                 for item in self._annual_items(facts, tag):
-                    year = self._fiscal_year(item)
+                    year = self._period_year(item)
                     if year is None:
                         continue
                     current = annual_values[year].get(field)
@@ -109,6 +109,23 @@ class FinancialFactsMapper:
             return float(value)
         except (TypeError, ValueError):
             return None
+
+    @staticmethod
+    def _period_year(item: dict[str, Any]) -> int | None:
+        frame = item.get("frame")
+        if isinstance(frame, str):
+            match = frame.removeprefix("CY")
+            if len(match) >= 4 and match[:4].isdigit():
+                return int(match[:4])
+
+        end = item.get("end")
+        if isinstance(end, str) and len(end) >= 4:
+            try:
+                return int(end[:4])
+            except ValueError:
+                return None
+
+        return FinancialFactsMapper._fiscal_year(item)
 
 
 class FinancialMetricCalculator:

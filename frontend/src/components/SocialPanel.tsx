@@ -2,6 +2,7 @@ import React from "react";
 import { StockData } from "../types";
 import type { SocialSort, SourceState } from "../api/backendTypes";
 import { Eye, Heart, Maximize2, MessageCircle, Minimize2, Repeat2 } from "lucide-react";
+import { LoadingState } from "./LoadingState";
 
 export function SocialPanel({
   data,
@@ -22,59 +23,54 @@ export function SocialPanel({
   onExpand?: () => void;
   isExpanded?: boolean;
 }) {
-  if (isLoading)
-    return (
-      <div className="p-6 text-slate-500 text-sm">
-        Loading social posts...
+  const toolbar = (
+    <div className="h-14 px-4 bg-white dark:bg-[#161B22] border-b border-slate-200 dark:border-[#30363D] flex justify-between items-center shrink-0">
+      <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tighter">
+        Social Points
+      </h3>
+      <div className="flex items-center gap-2">
+        <select
+          value={sort || "latest"}
+          onChange={(event) => onSortChange?.(event.target.value as SocialSort)}
+          className="text-[10px] bg-transparent border border-slate-300 dark:border-[#30363D] rounded px-1.5 py-0.5 outline-none text-slate-500 dark:text-slate-400"
+        >
+          <option value="hot">Trending</option>
+          <option value="latest">Latest</option>
+        </select>
+        {onExpand && (
+          <button
+            onClick={onExpand}
+            className="p-1 rounded text-slate-500 hover:bg-slate-100 dark:hover:bg-[#30363D] hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+          >
+            {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+          </button>
+        )}
       </div>
-    );
+    </div>
+  );
+
+  const panelState = (content: React.ReactNode) => (
+    <div className="flex flex-col h-full bg-white dark:bg-[#161B22] overflow-hidden transition-colors">
+      {toolbar}
+      <div className="flex-1 bg-slate-50 dark:bg-[#30363D]/20">{content}</div>
+    </div>
+  );
+
+  if (isLoading)
+    return panelState(<LoadingState label="Loading social posts..." />);
 
   if (error)
-    return (
-      <div className="p-6 text-slate-500 text-sm">
-        {error}
-      </div>
-    );
+    return panelState(<div className="p-6 text-slate-500 text-sm">{error}</div>);
 
   if (status && !status.ok)
-    return (
-      <div className="p-6 text-slate-500 text-sm">
-        Social data could not be loaded.
-      </div>
-    );
+    return panelState(<div className="p-6 text-slate-500 text-sm">Social data could not be loaded.</div>);
 
   if (!data?.tweets?.length)
-    return (
-      <div className="p-6 text-slate-500 text-sm">
-        No social data available.
-      </div>
-    );
+    return panelState(<div className="p-6 text-slate-500 text-sm">No social data available.</div>);
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-[#161B22] overflow-hidden transition-colors">
-      <div className="h-14 px-4 bg-white dark:bg-[#161B22] border-b border-slate-200 dark:border-[#30363D] flex justify-between items-center shrink-0">
-        <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tighter">
-          Social Points
-        </h3>
-        <div className="flex items-center gap-2">
-          <select
-            value={sort || "latest"}
-            onChange={(event) => onSortChange?.(event.target.value as SocialSort)}
-            className="text-[10px] bg-transparent border border-slate-300 dark:border-[#30363D] rounded px-1.5 py-0.5 outline-none text-slate-500 dark:text-slate-400"
-          >
-            <option value="hot">Trending</option>
-            <option value="latest">Latest</option>
-          </select>
-          {onExpand && (
-            <button
-              onClick={onExpand}
-              className="p-1 rounded text-slate-500 hover:bg-slate-100 dark:hover:bg-[#30363D] hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
-            >
-              {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-            </button>
-          )}
-        </div>
-      </div>
+      {toolbar}
 
       <div className="flex-1 overflow-y-auto w-full bg-slate-50 dark:bg-[#30363D]/20 space-y-px">
         <div className="divide-y divide-slate-100 dark:divide-[#30363D]/50">

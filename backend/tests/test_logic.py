@@ -98,6 +98,57 @@ def test_financial_facts_mapper_extracts_annual_history_and_summary():
     assert summary.net_sales == 1000.0
 
 
+def test_financial_facts_mapper_uses_fact_period_year_for_comparative_rows():
+    facts = {
+        "us-gaap": {
+            "RevenueFromContractWithCustomerExcludingAssessedTax": {
+                "units": {
+                    "USD": [
+                        {
+                            "form": "10-K",
+                            "fp": "FY",
+                            "fy": 2025,
+                            "start": "2022-09-25",
+                            "end": "2023-09-30",
+                            "val": 800,
+                            "filed": "2025-10-31",
+                            "frame": "CY2023",
+                        },
+                        {
+                            "form": "10-K",
+                            "fp": "FY",
+                            "fy": 2025,
+                            "start": "2023-10-01",
+                            "end": "2024-09-28",
+                            "val": 900,
+                            "filed": "2025-10-31",
+                            "frame": "CY2024",
+                        },
+                        {
+                            "form": "10-K",
+                            "fp": "FY",
+                            "fy": 2025,
+                            "start": "2024-09-29",
+                            "end": "2025-09-27",
+                            "val": 1000,
+                            "filed": "2025-10-31",
+                            "frame": "CY2025",
+                        },
+                    ]
+                }
+            }
+        }
+    }
+
+    history = FinancialFactsMapper().history(facts, "DEMO")
+
+    assert [(year.year, year.year_end, year.revenue) for year in history] == [
+        (2025, "2025-09-27", 1000.0),
+        (2024, "2024-09-28", 900.0),
+        (2023, "2023-09-30", 800.0),
+    ]
+
+
 def test_social_post_normalizer_limits_and_maps_fields():
     posts = SocialPostNormalizer().normalize_many(
         [

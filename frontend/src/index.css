@@ -45,3 +45,16 @@ html.dark ::-webkit-scrollbar-thumb {
 html.dark ::-webkit-scrollbar-thumb:hover {
   background: #4B5563;
 }
+
+@keyframes loading-progress {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(240%);
+  }
+}
+
+.loading-progress {
+  animation: loading-progress 1.2s ease-in-out infinite;
+}
