@@ -1,8 +1,9 @@
 import React from 'react';
 import { Sunrise, Sunset, Moon } from 'lucide-react';
 import { cn } from '../lib/utils';
+import type { MarketStatusValue } from '../api/backendTypes';
 
-export type MarketState = 'pre_market' | 'open' | 'post_market' | 'overnight' | 'closed';
+export type MarketState = MarketStatusValue;
 
 export function MarketStatusIndicator({ status = 'open', className }: { status?: MarketState, className?: string }) {
   const config = {
@@ -14,7 +15,7 @@ export function MarketStatusIndicator({ status = 'open', className }: { status?:
       icon: <div className="w-3.5 h-3.5 rounded-full bg-emerald-500" />,
       text: '开盘',
     },
-    post_market: {
+    after_hours: {
       icon: <Sunset size={18} className="text-violet-500" />,
       text: '盘后',
     },

@@ -5,22 +5,54 @@ import { FinancialsPanel } from './components/FinancialsPanel';
 import { ChartPanel } from './components/ChartPanel';
 import { SocialPanel } from './components/SocialPanel';
 import { MarketStatusIndicator } from './components/MarketStatusIndicator';
+import { api, ApiError } from './api/client';
+import { adaptDashboard } from './api/adapters';
 import { mockStocks } from './mockData';
 import { cn } from './lib/utils';
+import { formatCurrency, formatNumber, hasNumber } from './lib/format';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
+import type { StockData } from './types';
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeStock, setActiveStock] = useState('AAPL');
   const [watchlist, setWatchlist] = useState(['AAPL', 'TSLA', 'MSFT']);
+  const [stockData, setStockData] = useState<StockData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [expandedPanel, setExpandedPanel] = useState<'financials' | 'chart' | 'social' | null>(null);
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
   }, []);
 
-  const stockData = mockStocks[activeStock];
+  useEffect(() => {
+    let cancelled = false;
+
+    setIsLoading(true);
+    setLoadError(null);
+    setStockData(null);
+
+    api.dashboard(activeStock)
+      .then((response) => {
+        if (!cancelled) setStockData(adaptDashboard(response));
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setLoadError(error instanceof ApiError ? error.message : 'Unable to load stock data.');
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeStock]);
+
   const info = stockData?.info;
+  const overviewStatus = stockData?.sources?.overview;
+  const hasChange = hasNumber(info?.change) && hasNumber(info?.changePercent);
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[#FAFAFA] dark:bg-[#0B0E14] text-slate-800 dark:text-slate-300 font-sans transition-colors">
@@ -35,7 +67,15 @@ export default function App() {
         />
 
         <main className="flex-1 overflow-x-auto overflow-y-hidden flex flex-col">
-          {info ? (
+          {isLoading ? (
+            <div className="flex-1 flex items-center justify-center text-sm text-slate-500">
+              Loading stock data...
+            </div>
+          ) : loadError ? (
+            <div className="flex-1 flex items-center justify-center text-sm text-slate-500">
+              {loadError}
+            </div>
+          ) : info && stockData ? (
             <div className="flex-1 flex flex-col min-w-[1024px] p-6 lg:p-8 h-full overflow-hidden">
               {/* Active Stock Header */}
               <div className="flex justify-between items-center mb-6 shrink-0">
@@ -47,17 +87,24 @@ export default function App() {
                   <div className="hidden sm:block h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
                   <div className="flex items-baseline gap-4">
                     <span className="text-3xl font-medium tracking-tight tabular-nums text-slate-900 dark:text-white">
-                      ${info.price.toFixed(2)}
+                      {formatCurrency(info.price)}
                     </span>
-                    <span className={cn(
-                      "flex items-center text-sm font-medium px-2 py-1 rounded",
-                      info.change >= 0 ? "text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40" : "text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/40"
-                    )}>
-                      {info.change >= 0 ? '▲' : '▼'} {Math.abs(info.change).toFixed(2)} ({Math.abs(info.changePercent).toFixed(2)}%)
-                    </span>
-                    <MarketStatusIndicator status="open" className="ml-2 hidden sm:flex" />
+                    {hasChange && (
+                      <span className={cn(
+                        "flex items-center text-sm font-medium px-2 py-1 rounded",
+                        info.change >= 0 ? "text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40" : "text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/40"
+                      )}>
+                        {info.change >= 0 ? '▲' : '▼'} {formatNumber(Math.abs(info.change))} ({formatNumber(Math.abs(info.changePercent))}%)
+                      </span>
+                    )}
+                    {info.marketStatus && <MarketStatusIndicator status={info.marketStatus} className="ml-2 hidden sm:flex" />}
                   </div>
                 </div>
+                {overviewStatus && !overviewStatus.ok && (
+                  <div className="text-xs text-red-600 dark:text-red-400">
+                    Stock details unavailable.
+                  </div>
+                )}
               </div>
 
               {/* 3-Column Dashboard Layout */}
@@ -67,6 +114,7 @@ export default function App() {
                     <div className="h-full overflow-hidden bg-white dark:bg-[#161B22]">
                       <FinancialsPanel 
                         data={stockData} 
+                        status={stockData.sources?.financials}
                         isExpanded={expandedPanel === 'financials'} 
                         onExpand={() => setExpandedPanel(expandedPanel === 'financials' ? null : 'financials')} 
                       />
@@ -85,6 +133,7 @@ export default function App() {
                     <div className="h-full overflow-hidden bg-white dark:bg-[#161B22]">
                       <ChartPanel 
                         data={stockData} 
+                        status={stockData.sources?.chart}
                         isExpanded={expandedPanel === 'chart'} 
                         onExpand={() => setExpandedPanel(expandedPanel === 'chart' ? null : 'chart')} 
                       />
@@ -103,6 +152,7 @@ export default function App() {
                     <div className="h-full overflow-hidden bg-white dark:bg-[#161B22]">
                       <SocialPanel 
                         data={stockData} 
+                        status={stockData.sources?.social}
                         isExpanded={expandedPanel === 'social'} 
                         onExpand={() => setExpandedPanel(expandedPanel === 'social' ? null : 'social')} 
                       />
@@ -113,7 +163,7 @@ export default function App() {
             </div>
           ) : (
             <div className="flex-1 flex items-center justify-center text-gray-500">
-              Select a stock from the watchlist or search for one.
+              No stock data available.
             </div>
           )}
         </main>

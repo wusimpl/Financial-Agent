@@ -1,5 +1,6 @@
 import React from "react";
 import { StockData } from "../types";
+import type { SourceState } from "../api/backendTypes";
 import {
   ComposedChart,
   Line,
@@ -11,20 +12,26 @@ import {
   CartesianGrid,
   Cell,
   ReferenceLine,
-  Area,
 } from "recharts";
-import { cn } from "../lib/utils";
 import { Maximize2, Minimize2 } from "lucide-react";
+import { formatNumber, hasNumber } from "../lib/format";
 
 export function ChartPanel({
   data,
+  status,
   onExpand,
   isExpanded,
 }: {
   data: StockData;
+  status?: SourceState;
   onExpand?: () => void;
   isExpanded?: boolean;
 }) {
+  if (status && !status.ok)
+    return (
+      <div className="p-6 text-slate-500 text-sm">Chart data could not be loaded.</div>
+    );
+
   if (!data?.chart?.length)
     return (
       <div className="p-6 text-slate-500 text-sm">No chart data available.</div>
@@ -102,7 +109,8 @@ export function ChartPanel({
           </h3>
           <div className="flex gap-1 text-[10px] font-mono px-2">
             <select
-              defaultValue="6M"
+              value={data.chartRange || "1Y"}
+              onChange={() => undefined}
               className="bg-transparent border border-slate-300 dark:border-[#30363D] rounded px-1.5 py-0.5 outline-none text-slate-800 dark:text-slate-200 font-bold"
             >
               {["1D", "5D", "1M", "3M", "6M", "YTD", "1Y", "5Y", "All"].map(
@@ -136,13 +144,13 @@ export function ChartPanel({
       {/* Legend */}
       <div className="px-4 py-2 flex items-center gap-6 text-[10px] font-mono border-b border-slate-200 dark:border-[#30363D]/50 bg-slate-50 dark:bg-[#0B0E14]">
         <div className="flex gap-2 text-blue-500 dark:text-blue-400">
-          <span>MA(20)</span> <span>{lastPoint?.ma20?.toFixed(2)}</span>
+          <span>MA(20)</span> <span>{formatNumber(lastPoint?.ma20)}</span>
         </div>
         <div className="flex gap-2 text-orange-500 dark:text-orange-400">
-          <span>MA(50)</span> <span>{lastPoint?.ma50?.toFixed(2)}</span>
+          <span>MA(50)</span> <span>{formatNumber(lastPoint?.ma50)}</span>
         </div>
         <div className="flex gap-2 text-purple-500 dark:text-purple-400">
-          <span>MA(200)</span> <span>{lastPoint?.ma200?.toFixed(2)}</span>
+          <span>MA(200)</span> <span>{formatNumber(lastPoint?.ma200)}</span>
         </div>
       </div>
 
@@ -229,7 +237,7 @@ export function ChartPanel({
                 isAnimationActive={false}
               />
               <ReferenceLine
-                y={info?.price}
+                y={hasNumber(info?.price) ? info.price : undefined}
                 stroke="#10B981"
                 strokeDasharray="3 3"
                 strokeWidth={0.5}
@@ -284,7 +292,7 @@ export function ChartPanel({
         {/* RSI Sub-Chart */}
         <div className="h-[100px] w-full border-b border-slate-200 dark:border-[#30363D]/50 mb-2 relative">
           <div className="absolute top-1 left-4 text-[10px] font-mono text-purple-500 dark:text-purple-400">
-            RSI(14) {lastPoint?.rsi14?.toFixed(2)}
+            RSI(14) {formatNumber(lastPoint?.rsi14)}
           </div>
           <ResponsiveContainer
             width="100%"
@@ -346,19 +354,19 @@ export function ChartPanel({
               MACD(12,26,9)
             </span>
             <span className="text-blue-500 dark:text-blue-400">
-              {lastPoint?.macd?.toFixed(2)}
+              {formatNumber(lastPoint?.macd)}
             </span>
             <span className="text-orange-500 dark:text-orange-400">
-              {lastPoint?.macdSignal?.toFixed(2)}
+              {formatNumber(lastPoint?.macdSignal)}
             </span>
             <span
               className={
-                lastPoint?.macdHist! > 0
+                hasNumber(lastPoint?.macdHist) && lastPoint.macdHist > 0
                   ? "text-green-600 dark:text-green-500"
                   : "text-red-600 dark:text-red-500"
               }
             >
-              {lastPoint?.macdHist?.toFixed(2)}
+              {formatNumber(lastPoint?.macdHist)}
             </span>
           </div>
           <ResponsiveContainer
@@ -399,7 +407,7 @@ export function ChartPanel({
                 {chartData.map((entry, index) => (
                   <Cell
                     key={index}
-                    fill={entry.macdHist! > 0 ? "#10B981" : "#EF4444"}
+                    fill={hasNumber(entry.macdHist) && entry.macdHist > 0 ? "#10B981" : "#EF4444"}
                     opacity={0.8}
                   />
                 ))}
@@ -430,25 +438,25 @@ export function ChartPanel({
             <div className="flex justify-between">
               <span className="text-slate-500">Open</span>
               <span className="text-slate-800 dark:text-slate-200">
-                {info?.open?.toFixed(2) || "-"}
+                {formatNumber(info?.open)}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">High</span>
               <span className="text-slate-800 dark:text-slate-200">
-                {info?.high?.toFixed(2) || "-"}
+                {formatNumber(info?.high)}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Low</span>
               <span className="text-slate-800 dark:text-slate-200">
-                {info?.low?.toFixed(2) || "-"}
+                {formatNumber(info?.low)}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Prev Close</span>
               <span className="text-slate-800 dark:text-slate-200">
-                {info?.prevClose?.toFixed(2) || "-"}
+                {formatNumber(info?.prevClose)}
               </span>
             </div>
           </div>
@@ -468,13 +476,13 @@ export function ChartPanel({
             <div className="flex justify-between">
               <span className="text-slate-500">Beta</span>
               <span className="text-slate-800 dark:text-slate-200">
-                {info?.beta?.toFixed(2) || "-"}
+                {formatNumber(info?.beta)}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">P/E Ratio</span>
               <span className="text-slate-800 dark:text-slate-200">
-                {info?.peRatio?.toFixed(2) || "-"}
+                {formatNumber(info?.peRatio)}
               </span>
             </div>
           </div>
@@ -488,7 +496,7 @@ export function ChartPanel({
             <div className="flex justify-between">
               <span className="text-slate-500">EPS (TTM)</span>
               <span className="text-slate-800 dark:text-slate-200">
-                {info?.eps?.toFixed(2) || "-"}
+                {formatNumber(info?.eps)}
               </span>
             </div>
             <div className="flex justify-between">
@@ -500,18 +508,18 @@ export function ChartPanel({
             <div className="flex justify-between">
               <span className="text-slate-500">Target Est</span>
               <span className="text-slate-800 dark:text-slate-200">
-                {info?.targetEst?.toFixed(2) || "-"}
+                {formatNumber(info?.targetEst)}
               </span>
             </div>
           </div>
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-slate-500">Next Div</span>
-              <span className="text-slate-800 dark:text-slate-200">May 15</span>
+              <span className="text-slate-800 dark:text-slate-200">{info?.nextDividendDate || "—"}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Ex-Div</span>
-              <span className="text-slate-800 dark:text-slate-200">May 12</span>
+              <span className="text-slate-800 dark:text-slate-200">{info?.exDividendDate || "—"}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Div Yield</span>

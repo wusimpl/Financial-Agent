@@ -30,6 +30,11 @@ function percent(value?: number | null) {
   return `${(value * 100).toFixed(2)}%`;
 }
 
+function percentPoints(value?: number | null) {
+  if (value === null || value === undefined) return null;
+  return value * 100;
+}
+
 function dateLabel(value?: string | null) {
   if (!value) return '—';
 
@@ -53,7 +58,7 @@ function toStockInfo(ticker: string, overview?: StockOverviewResponse | null): S
     name: overview?.identity.company_name || ticker,
     price: overview?.quote.price ?? null,
     change: overview?.quote.change ?? null,
-    changePercent: overview?.quote.change_percent ?? null,
+    changePercent: percentPoints(overview?.quote.change_percent),
     marketCap: compactCurrency(overview?.valuation.market_cap),
     peRatio: overview?.valuation.pe_ratio ?? null,
     dividendYield: percent(overview?.dividend.dividend_yield),
@@ -145,6 +150,7 @@ export function adaptDashboard(response: DashboardResponse): StockData {
     financials: toFinancialYears(response.financials),
     insights: [],
     tweets: response.social.items.map(toTweet),
+    chartRange: response.chart.range,
     sources: response.sources,
   };
 }

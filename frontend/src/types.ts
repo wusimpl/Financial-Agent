@@ -1,4 +1,4 @@
-import type { MarketStatusValue, SourceState } from './api/backendTypes';
+import type { ChartRange, MarketStatusValue, SourceState } from './api/backendTypes';
 
 export interface StockInfo {
   ticker: string;
@@ -80,5 +80,6 @@ export interface StockData {
   financials: FinancialYear[];
   insights: InsightData[];
   tweets: Tweet[];
+  chartRange?: ChartRange;
   sources?: Record<string, SourceState>;
 }

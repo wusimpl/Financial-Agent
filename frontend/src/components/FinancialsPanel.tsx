@@ -1,14 +1,18 @@
 import React, { useState } from "react";
 import { StockData } from "../types";
+import type { SourceState } from "../api/backendTypes";
 import { cn } from "../lib/utils";
 import { Maximize2, Minimize2 } from "lucide-react";
+import { formatMoneyAmount } from "../lib/format";
 
 export function FinancialsPanel({
   data,
+  status,
   onExpand,
   isExpanded,
 }: {
   data: StockData;
+  status?: SourceState;
   onExpand?: () => void;
   isExpanded?: boolean;
 }) {
@@ -20,6 +24,20 @@ export function FinancialsPanel({
   const [selectedType, setSelectedType] = useState<string>(filingTypes[0]);
 
   if (!data?.info) return null;
+
+  if (status && !status.ok) {
+    return (
+      <div className="p-6 text-slate-500 text-sm">Financial data could not be loaded.</div>
+    );
+  }
+
+  if (status?.empty || !data.financials.length) {
+    return (
+      <div className="p-6 text-slate-500 text-sm">No financial data available.</div>
+    );
+  }
+
+  const latestFinancials = data.financials[0];
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-[#161B22] overflow-hidden transition-colors">
@@ -218,28 +236,19 @@ export function FinancialsPanel({
                   <tr>
                     <td className="py-2">Net Sales</td>
                     <td className="text-right py-2">
-                      $
-                      {(
-                        data.financials?.[0]?.netSales || 383285
-                      ).toLocaleString()}
+                      {formatMoneyAmount(latestFinancials.netSales)}
                     </td>
                   </tr>
                   <tr>
                     <td className="py-2">Cost of Sales</td>
                     <td className="text-right py-2 border-b border-black dark:border-[#30363D]">
-                      $
-                      {(
-                        data.financials?.[0]?.costOfSales || 210705
-                      ).toLocaleString()}
+                      {formatMoneyAmount(latestFinancials.costOfSales)}
                     </td>
                   </tr>
                   <tr>
                     <td className="py-2 font-bold">Gross Margin</td>
                     <td className="text-right py-2 font-bold">
-                      $
-                      {(
-                        data.financials?.[0]?.grossProfit || 172579
-                      ).toLocaleString()}
+                      {formatMoneyAmount(latestFinancials.grossProfit)}
                     </td>
                   </tr>
                 </tbody>

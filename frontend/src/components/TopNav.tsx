@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { mockStocks } from '../mockData';
 import { Search, TrendingUp, Sun, Moon, Settings } from 'lucide-react';
 
 interface TopNavProps {

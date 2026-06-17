@@ -1,17 +1,27 @@
 import React from "react";
 import { StockData } from "../types";
+import type { SourceState } from "../api/backendTypes";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { cn } from "../lib/utils";
 
 export function SocialPanel({
   data,
+  status,
   onExpand,
   isExpanded,
 }: {
   data: StockData;
+  status?: SourceState;
   onExpand?: () => void;
   isExpanded?: boolean;
 }) {
+  if (status && !status.ok)
+    return (
+      <div className="p-6 text-slate-500 text-sm">
+        Social data could not be loaded.
+      </div>
+    );
+
   if (!data?.tweets?.length)
     return (
       <div className="p-6 text-slate-500 text-sm">
