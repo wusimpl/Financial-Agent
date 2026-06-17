@@ -150,7 +150,6 @@ export function adaptDashboard(response: DashboardResponse): StockData {
     info: toStockInfo(response.ticker, response.overview),
     chart: response.chart.points.filter(hasPricePoint).map(toChartPoint),
     financials: toFinancialYears(response.financials),
-    insights: [],
     tweets: response.social.items.map(toTweet),
     chartRange: response.chart.range,
     sources: response.sources,

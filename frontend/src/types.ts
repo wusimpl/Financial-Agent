@@ -52,14 +52,6 @@ export interface FinancialYear {
   eps: number | null;
 }
 
-export interface InsightData {
-  label: string;
-  value: string;
-  subtext: string;
-  trend: 'up' | 'down';
-  history: number[];
-}
-
 export interface Tweet {
   id: string;
   author: string;
@@ -78,7 +70,6 @@ export interface StockData {
   info: StockInfo;
   chart: ChartDataPoint[];
   financials: FinancialYear[];
-  insights: InsightData[];
   tweets: Tweet[];
   chartRange?: ChartRange;
   sources?: Record<string, SourceState>;
