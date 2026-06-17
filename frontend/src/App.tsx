@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { TopNav } from './components/TopNav';
 import { Sidebar } from './components/Sidebar';
 import { FinancialsPanel } from './components/FinancialsPanel';
@@ -6,12 +6,12 @@ import { ChartPanel } from './components/ChartPanel';
 import { SocialPanel } from './components/SocialPanel';
 import { MarketStatusIndicator } from './components/MarketStatusIndicator';
 import { api, ApiError } from './api/client';
-import { adaptDashboard } from './api/adapters';
+import { adaptChart, adaptDashboard } from './api/adapters';
 import { cn } from './lib/utils';
 import { formatCurrency, formatNumber, hasNumber } from './lib/format';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import type { StockData } from './types';
-import type { WatchlistItem } from './api/backendTypes';
+import type { ChartRange, WatchlistItem } from './api/backendTypes';
 
 export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,7 +22,11 @@ export default function App() {
   const [stockData, setStockData] = useState<StockData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedChartRange, setSelectedChartRange] = useState<ChartRange>('1Y');
+  const [chartLoading, setChartLoading] = useState(false);
+  const [chartError, setChartError] = useState<string | null>(null);
   const [expandedPanel, setExpandedPanel] = useState<'financials' | 'chart' | 'social' | null>(null);
+  const chartRequestId = useRef(0);
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
@@ -58,10 +62,16 @@ export default function App() {
     setIsLoading(true);
     setLoadError(null);
     setStockData(null);
+    setChartLoading(false);
+    setChartError(null);
+    chartRequestId.current += 1;
 
     api.dashboard(activeStock)
       .then((response) => {
-        if (!cancelled) setStockData(adaptDashboard(response));
+        if (!cancelled) {
+          setStockData(adaptDashboard(response));
+          setSelectedChartRange(response.chart.range);
+        }
       })
       .catch((error) => {
         if (cancelled) return;
@@ -75,6 +85,32 @@ export default function App() {
       cancelled = true;
     };
   }, [activeStock]);
+
+  const loadChartRange = (range: ChartRange) => {
+    const requestId = chartRequestId.current + 1;
+    chartRequestId.current = requestId;
+    setSelectedChartRange(range);
+    setChartLoading(true);
+    setChartError(null);
+
+    api.chart(activeStock, range)
+      .then((response) => {
+        if (requestId !== chartRequestId.current) return;
+        const nextChart = adaptChart(response);
+        setStockData((current) => current ? {
+          ...current,
+          chart: nextChart.chart,
+          chartRange: nextChart.chartRange,
+        } : current);
+      })
+      .catch((error) => {
+        if (requestId !== chartRequestId.current) return;
+        setChartError(error instanceof ApiError ? error.message : 'Unable to load chart data.');
+      })
+      .finally(() => {
+        if (requestId === chartRequestId.current) setChartLoading(false);
+      });
+  };
 
   const info = stockData?.info;
   const overviewStatus = stockData?.sources?.overview;
@@ -165,6 +201,10 @@ export default function App() {
                       <ChartPanel 
                         data={stockData} 
                         status={stockData.sources?.chart}
+                        range={selectedChartRange}
+                        isLoading={chartLoading}
+                        error={chartError}
+                        onRangeChange={loadChartRange}
                         isExpanded={expandedPanel === 'chart'} 
                         onExpand={() => setExpandedPanel(expandedPanel === 'chart' ? null : 'chart')} 
                       />

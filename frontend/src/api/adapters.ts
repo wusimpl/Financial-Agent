@@ -1,4 +1,5 @@
 import type {
+  ChartResponse,
   ChartPoint,
   DashboardResponse,
   FinancialHistoryResponse,
@@ -152,5 +153,12 @@ export function adaptDashboard(response: DashboardResponse): StockData {
     tweets: response.social.items.map(toTweet),
     chartRange: response.chart.range,
     sources: response.sources,
+  };
+}
+
+export function adaptChart(response: ChartResponse) {
+  return {
+    chart: response.points.filter(hasPricePoint).map(toChartPoint),
+    chartRange: response.range,
   };
 }

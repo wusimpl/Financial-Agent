@@ -1,6 +1,6 @@
 import React from "react";
 import { StockData } from "../types";
-import type { SourceState } from "../api/backendTypes";
+import type { ChartRange, SourceState } from "../api/backendTypes";
 import {
   ComposedChart,
   Line,
@@ -19,14 +19,34 @@ import { formatNumber, hasNumber } from "../lib/format";
 export function ChartPanel({
   data,
   status,
+  range,
+  isLoading,
+  error,
+  onRangeChange,
   onExpand,
   isExpanded,
 }: {
   data: StockData;
   status?: SourceState;
+  range?: ChartRange;
+  isLoading?: boolean;
+  error?: string | null;
+  onRangeChange?: (range: ChartRange) => void;
   onExpand?: () => void;
   isExpanded?: boolean;
 }) {
+  const ranges: ChartRange[] = ["1D", "5D", "1M", "3M", "6M", "YTD", "1Y", "5Y", "All"];
+
+  if (isLoading)
+    return (
+      <div className="p-6 text-slate-500 text-sm">Loading chart...</div>
+    );
+
+  if (error)
+    return (
+      <div className="p-6 text-slate-500 text-sm">{error}</div>
+    );
+
   if (status && !status.ok)
     return (
       <div className="p-6 text-slate-500 text-sm">Chart data could not be loaded.</div>
@@ -109,14 +129,14 @@ export function ChartPanel({
           </h3>
           <div className="flex gap-1 text-[10px] font-mono px-2">
             <select
-              value={data.chartRange || "1Y"}
-              onChange={() => undefined}
+              value={range || data.chartRange || "1Y"}
+              onChange={(event) => onRangeChange?.(event.target.value as ChartRange)}
               className="bg-transparent border border-slate-300 dark:border-[#30363D] rounded px-1.5 py-0.5 outline-none text-slate-800 dark:text-slate-200 font-bold"
             >
-              {["1D", "5D", "1M", "3M", "6M", "YTD", "1Y", "5Y", "All"].map(
-                (tf) => (
-                  <option key={tf} value={tf}>
-                    {tf}
+              {ranges.map(
+                (chartRange) => (
+                  <option key={chartRange} value={chartRange}>
+                    {chartRange}
                   </option>
                 ),
               )}
