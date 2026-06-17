@@ -1,23 +1,28 @@
+import type { MarketStatusValue, SourceState } from './api/backendTypes';
+
 export interface StockInfo {
   ticker: string;
   name: string;
-  price: number;
-  change: number;
-  changePercent: number;
+  price: number | null;
+  change: number | null;
+  changePercent: number | null;
   marketCap: string;
-  peRatio: number;
+  peRatio: number | null;
   dividendYield: string;
   range52Week: string;
-  open: number;
-  high: number;
-  low: number;
-  prevClose: number;
+  open: number | null;
+  high: number | null;
+  low: number | null;
+  prevClose: number | null;
   volume: string;
   avgVolume: string;
-  beta: number;
-  eps: number;
+  beta: number | null;
+  eps: number | null;
   earningsDate: string;
-  targetEst: number;
+  targetEst: number | null;
+  nextDividendDate?: string;
+  exDividendDate?: string;
+  marketStatus?: MarketStatusValue;
 }
 
 export interface ChartDataPoint {
@@ -26,25 +31,25 @@ export interface ChartDataPoint {
   high: number;
   low: number;
   close: number;
-  volume: number;
-  ma20: number;
-  ma50: number;
-  ma200?: number;
-  rsi14?: number;
-  macd?: number;
-  macdSignal?: number;
-  macdHist?: number;
+  volume: number | null;
+  ma20?: number | null;
+  ma50?: number | null;
+  ma200?: number | null;
+  rsi14?: number | null;
+  macd?: number | null;
+  macdSignal?: number | null;
+  macdHist?: number | null;
 }
 
 export interface FinancialYear {
   yearEnded: string;
-  netSales: number;
-  costOfSales: number;
-  grossProfit: number;
-  operatingExpenses: number;
-  operatingIncome: number;
-  netIncome: number;
-  eps: number;
+  netSales: number | null;
+  costOfSales: number | null;
+  grossProfit: number | null;
+  operatingExpenses: number | null;
+  operatingIncome: number | null;
+  netIncome: number | null;
+  eps: number | null;
 }
 
 export interface InsightData {
@@ -62,7 +67,7 @@ export interface Tweet {
   avatar: string;
   content: string;
   timeAgo: string;
-  sentiment: 'Bullish' | 'Bearish' | 'Neutral';
+  sentiment?: 'Bullish' | 'Bearish' | 'Neutral';
   replies: number;
   retweets: number;
   likes: number;
@@ -75,4 +80,5 @@ export interface StockData {
   financials: FinancialYear[];
   insights: InsightData[];
   tweets: Tweet[];
+  sources?: Record<string, SourceState>;
 }
