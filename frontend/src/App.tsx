@@ -82,7 +82,11 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[#FAFAFA] dark:bg-[#0B0E14] text-slate-800 dark:text-slate-300 font-sans transition-colors">
-      <TopNav searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      <TopNav
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onSelectStock={setActiveStock}
+      />
       
       <div className="flex flex-1 overflow-hidden">
         <Sidebar 
