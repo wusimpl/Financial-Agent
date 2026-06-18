@@ -11,7 +11,7 @@ import { cn } from './lib/utils';
 import { formatCurrency, formatNumber, hasNumber } from './lib/format';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import type { ChartDataPoint, FinancialYear, StockData, StockInfo, Tweet } from './types';
-import type { ChartRange, SocialSort, WatchlistItem } from './api/backendTypes';
+import type { ChartRange, SocialLanguage, SocialMinFaves, SocialSort, WatchlistItem } from './api/backendTypes';
 
 function emptyStockInfo(ticker: string): StockInfo {
   return {
@@ -54,7 +54,9 @@ export default function App() {
   const [financials, setFinancials] = useState<FinancialYear[]>([]);
   const [financialsLoading, setFinancialsLoading] = useState(true);
   const [financialsError, setFinancialsError] = useState<string | null>(null);
-  const [selectedSocialSort, setSelectedSocialSort] = useState<SocialSort>('latest');
+  const [selectedSocialSort, setSelectedSocialSort] = useState<SocialSort>('hot');
+  const [selectedSocialLanguage, setSelectedSocialLanguage] = useState<SocialLanguage>('zh');
+  const [selectedSocialMinFaves, setSelectedSocialMinFaves] = useState<SocialMinFaves>(30);
   const [tweets, setTweets] = useState<Tweet[]>([]);
   const [socialLoading, setSocialLoading] = useState(true);
   const [socialError, setSocialError] = useState<string | null>(null);
@@ -168,12 +170,18 @@ export default function App() {
     setSocialLoading(true);
     setSocialError(null);
 
-    api.socialPosts(activeStock, selectedSocialSort)
+    api.socialPosts(activeStock, {
+      sort: selectedSocialSort,
+      language: selectedSocialLanguage,
+      minFaves: selectedSocialMinFaves,
+    })
       .then((response) => {
         if (requestId !== socialRequestId.current) return;
         const nextSocial = adaptSocial(response);
         setTweets(nextSocial.tweets);
         setSelectedSocialSort(nextSocial.socialSort);
+        setSelectedSocialLanguage(nextSocial.socialLanguage);
+        setSelectedSocialMinFaves(nextSocial.socialMinFaves);
       })
       .catch((error) => {
         if (requestId !== socialRequestId.current) return;
@@ -182,7 +190,7 @@ export default function App() {
       .finally(() => {
         if (requestId === socialRequestId.current) setSocialLoading(false);
       });
-  }, [activeStock, selectedSocialSort]);
+  }, [activeStock, selectedSocialSort, selectedSocialLanguage, selectedSocialMinFaves]);
 
   const loadChartRange = (range: ChartRange) => {
     setSelectedChartRange(range);
@@ -190,6 +198,14 @@ export default function App() {
 
   const loadSocialSort = (sort: SocialSort) => {
     setSelectedSocialSort(sort);
+  };
+
+  const loadSocialLanguage = (language: SocialLanguage) => {
+    setSelectedSocialLanguage(language);
+  };
+
+  const loadSocialMinFaves = (minFaves: SocialMinFaves) => {
+    setSelectedSocialMinFaves(minFaves);
   };
 
   const addWatchlistItem = (ticker: string) => {
@@ -321,9 +337,13 @@ export default function App() {
                       <SocialPanel 
                         data={stockData} 
                         sort={selectedSocialSort}
+                        language={selectedSocialLanguage}
+                        minFaves={selectedSocialMinFaves}
                         isLoading={socialLoading}
                         error={socialError}
                         onSortChange={loadSocialSort}
+                        onLanguageChange={loadSocialLanguage}
+                        onMinFavesChange={loadSocialMinFaves}
                         isExpanded={expandedPanel === 'social'} 
                         onExpand={() => setExpandedPanel(expandedPanel === 'social' ? null : 'social')} 
                       />

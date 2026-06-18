@@ -2,6 +2,10 @@ export type ChartRange = '1D' | '5D' | '1M' | '3M' | '6M' | 'YTD' | '1Y' | '5Y' 
 
 export type SocialSort = 'hot' | 'latest';
 
+export type SocialLanguage = 'zh' | 'en';
+
+export type SocialMinFaves = 1 | 5 | 10 | 30 | 50 | 100 | 500 | 1000;
+
 export type MarketStatusValue = 'pre_market' | 'open' | 'after_hours' | 'overnight' | 'closed';
 
 export interface StockIdentity {
@@ -188,6 +192,8 @@ export interface SocialPost {
 export interface SocialPostsResponse {
   ticker: string;
   sort: SocialSort;
+  language: SocialLanguage;
+  min_faves: SocialMinFaves;
   items: SocialPost[];
 }
 

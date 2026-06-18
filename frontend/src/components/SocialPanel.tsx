@@ -1,42 +1,44 @@
 import React from "react";
 import { StockData } from "../types";
-import type { SocialSort, SourceState } from "../api/backendTypes";
+import type { SocialLanguage, SocialMinFaves, SocialSort, SourceState } from "../api/backendTypes";
 import { Eye, Heart, Maximize2, MessageCircle, Minimize2, Repeat2 } from "lucide-react";
 import { LoadingState } from "./LoadingState";
+
+const minFavesOptions: SocialMinFaves[] = [1, 5, 10, 30, 50, 100, 500, 1000];
 
 export function SocialPanel({
   data,
   status,
   sort,
+  language,
+  minFaves,
   isLoading,
   error,
   onSortChange,
+  onLanguageChange,
+  onMinFavesChange,
   onExpand,
   isExpanded,
 }: {
   data: StockData;
   status?: SourceState;
   sort?: SocialSort;
+  language?: SocialLanguage;
+  minFaves?: SocialMinFaves;
   isLoading?: boolean;
   error?: string | null;
   onSortChange?: (sort: SocialSort) => void;
+  onLanguageChange?: (language: SocialLanguage) => void;
+  onMinFavesChange?: (minFaves: SocialMinFaves) => void;
   onExpand?: () => void;
   isExpanded?: boolean;
 }) {
   const toolbar = (
-    <div className="h-14 px-4 bg-white dark:bg-[#161B22] border-b border-slate-200 dark:border-[#30363D] flex justify-between items-center shrink-0">
-      <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tighter">
-        Social Points
-      </h3>
-      <div className="flex items-center gap-2">
-        <select
-          value={sort || "latest"}
-          onChange={(event) => onSortChange?.(event.target.value as SocialSort)}
-          className="text-[10px] bg-transparent border border-slate-300 dark:border-[#30363D] rounded px-1.5 py-0.5 outline-none text-slate-500 dark:text-slate-400"
-        >
-          <option value="hot">Trending</option>
-          <option value="latest">Latest</option>
-        </select>
+    <div className="px-4 py-2 bg-white dark:bg-[#161B22] border-b border-slate-200 dark:border-[#30363D] shrink-0">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tighter whitespace-nowrap">
+          Social Points
+        </h3>
         {onExpand && (
           <button
             onClick={onExpand}
@@ -45,6 +47,39 @@ export function SocialPanel({
             {isExpanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
           </button>
         )}
+      </div>
+      <div className="mt-2 grid grid-cols-3 gap-1.5">
+        <select
+          value={language || "zh"}
+          onChange={(event) => onLanguageChange?.(event.target.value as SocialLanguage)}
+          aria-label="Language"
+          title="Language"
+          className="w-full min-w-0 text-[10px] bg-transparent border border-slate-300 dark:border-[#30363D] rounded px-1.5 py-0.5 outline-none text-slate-500 dark:text-slate-400"
+        >
+          <option value="zh">Chinese</option>
+          <option value="en">English</option>
+        </select>
+        <select
+          value={sort || "hot"}
+          onChange={(event) => onSortChange?.(event.target.value as SocialSort)}
+          aria-label="Sort"
+          title="Sort"
+          className="w-full min-w-0 text-[10px] bg-transparent border border-slate-300 dark:border-[#30363D] rounded px-1.5 py-0.5 outline-none text-slate-500 dark:text-slate-400"
+        >
+          <option value="hot">Trending</option>
+          <option value="latest">Latest</option>
+        </select>
+        <select
+          value={minFaves || 30}
+          onChange={(event) => onMinFavesChange?.(Number(event.target.value) as SocialMinFaves)}
+          aria-label="Minimum likes"
+          title="Minimum likes"
+          className="w-full min-w-0 text-[10px] bg-transparent border border-slate-300 dark:border-[#30363D] rounded px-1.5 py-0.5 outline-none text-slate-500 dark:text-slate-400"
+        >
+          {minFavesOptions.map((value) => (
+            <option key={value} value={value}>{value}+ likes</option>
+          ))}
+        </select>
       </div>
     </div>
   );

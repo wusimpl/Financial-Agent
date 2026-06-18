@@ -177,5 +177,7 @@ export function adaptSocial(response: SocialPostsResponse) {
   return {
     tweets: response.items.map(toTweet),
     socialSort: response.sort,
+    socialLanguage: response.language,
+    socialMinFaves: response.min_faves,
   };
 }

@@ -11,7 +11,8 @@ from app.logic import (
     TechnicalIndicatorCalculator,
     TickerNormalizer,
 )
-from app.schemas import ChartRange, MarketStatusValue
+from app.logic.social_search import build_social_search_query
+from app.schemas import ChartRange, MarketStatusValue, SocialLanguage, SocialMinFaves
 
 
 def test_ticker_normalizer_trims_and_uppercases():
@@ -168,3 +169,15 @@ def test_social_post_normalizer_limits_and_maps_fields():
     assert posts[0].author.handle == "@demo"
     assert posts[0].content == "Demo post"
     assert posts[0].views == 5000
+
+
+def test_social_search_query_uses_chinese_alias_and_quality_filters():
+    query = build_social_search_query("NVDA", SocialLanguage.zh, SocialMinFaves.thirty)
+
+    assert query == "($NVDA OR 英伟达) lang:zh min_faves:30"
+
+
+def test_social_search_query_uses_ticker_only_for_english():
+    query = build_social_search_query("NVDA", SocialLanguage.en, SocialMinFaves.five)
+
+    assert query == "$NVDA lang:en min_faves:5"

@@ -6,6 +6,8 @@ import type {
   FilingDocumentResponse,
   FilingSummary,
   FinancialHistoryResponse,
+  SocialLanguage,
+  SocialMinFaves,
   SocialPostsResponse,
   SocialSort,
   StockOverviewResponse,
@@ -86,10 +88,17 @@ export const api = {
     return request<{ status: string }>('/health');
   },
 
-  dashboard(ticker: string, options?: { range?: ChartRange; socialSort?: SocialSort }) {
+  dashboard(ticker: string, options?: {
+    range?: ChartRange;
+    socialSort?: SocialSort;
+    socialLanguage?: SocialLanguage;
+    socialMinFaves?: SocialMinFaves;
+  }) {
     return request<DashboardResponse>(`/dashboard/${ticker}`, {
       range: options?.range,
       social_sort: options?.socialSort,
+      social_language: options?.socialLanguage,
+      social_min_faves: options?.socialMinFaves,
     });
   },
 
@@ -145,7 +154,15 @@ export const api = {
     return request<FinancialHistoryResponse>(`/financials/${ticker}/history`);
   },
 
-  socialPosts(ticker: string, sort: SocialSort) {
-    return request<SocialPostsResponse>(`/social/${ticker}/posts`, { sort });
+  socialPosts(ticker: string, filters: {
+    sort: SocialSort;
+    language: SocialLanguage;
+    minFaves: SocialMinFaves;
+  }) {
+    return request<SocialPostsResponse>(`/social/${ticker}/posts`, {
+      sort: filters.sort,
+      language: filters.language,
+      min_faves: filters.minFaves,
+    });
   },
 };

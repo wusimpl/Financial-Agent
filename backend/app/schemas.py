@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -200,6 +200,22 @@ class SocialSort(str, Enum):
     latest = "latest"
 
 
+class SocialLanguage(str, Enum):
+    zh = "zh"
+    en = "en"
+
+
+class SocialMinFaves(IntEnum):
+    one = 1
+    five = 5
+    ten = 10
+    thirty = 30
+    fifty = 50
+    one_hundred = 100
+    five_hundred = 500
+    one_thousand = 1000
+
+
 class SocialAuthor(BaseModel):
     name: str
     handle: str | None = None
@@ -222,6 +238,8 @@ class SocialPost(BaseModel):
 class SocialPostsResponse(BaseModel):
     ticker: str
     sort: SocialSort
+    language: SocialLanguage = SocialLanguage.zh
+    min_faves: int = 30
     items: list[SocialPost] = Field(default_factory=list)
 
 

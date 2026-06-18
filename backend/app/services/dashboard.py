@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from app.errors import SourceStatusBuilder
 from app.logic.tickers import TickerNormalizer
-from app.schemas import ChartRange, ChartResponse, DashboardResponse, FinancialHistoryResponse, SocialPostsResponse, SocialSort
+from app.schemas import (
+    ChartRange,
+    ChartResponse,
+    DashboardResponse,
+    FinancialHistoryResponse,
+    SocialLanguage,
+    SocialMinFaves,
+    SocialPostsResponse,
+    SocialSort,
+)
 from app.services.charts import ChartDataService
 from app.services.financials import FinancialDataService
 from app.services.social import SocialPostService
@@ -28,11 +37,15 @@ class DashboardService:
         self,
         ticker: str,
         chart_range: ChartRange | str = ChartRange.one_year,
-        social_sort: SocialSort | str = SocialSort.latest,
+        social_sort: SocialSort | str = SocialSort.hot,
+        social_language: SocialLanguage | str = SocialLanguage.zh,
+        social_min_faves: SocialMinFaves | int = SocialMinFaves.thirty,
     ) -> DashboardResponse:
         normalized = TickerNormalizer.normalize(ticker)
         normalized_range = ChartRange(chart_range)
         normalized_sort = SocialSort(social_sort)
+        normalized_language = SocialLanguage(social_language)
+        normalized_min_faves = int(SocialMinFaves(social_min_faves))
         sources = {}
 
         try:
@@ -57,10 +70,21 @@ class DashboardService:
             sources["financials"] = self.status_builder.failure(exc)
 
         try:
-            social = self.social_service.posts(normalized, normalized_sort)
+            social = self.social_service.posts(
+                normalized,
+                sort=normalized_sort,
+                language=normalized_language,
+                min_faves=normalized_min_faves,
+            )
             sources["social"] = self.status_builder.success(social)
         except Exception as exc:
-            social = SocialPostsResponse(ticker=normalized, sort=normalized_sort, items=[])
+            social = SocialPostsResponse(
+                ticker=normalized,
+                sort=normalized_sort,
+                language=normalized_language,
+                min_faves=normalized_min_faves,
+                items=[],
+            )
             sources["social"] = self.status_builder.failure(exc)
 
         return DashboardResponse(
