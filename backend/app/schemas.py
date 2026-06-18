@@ -220,6 +220,7 @@ class SocialAuthor(BaseModel):
     name: str
     handle: str | None = None
     avatar: str | None = None
+    verified: bool = False
 
 
 class SocialPost(BaseModel):

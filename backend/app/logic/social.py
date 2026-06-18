@@ -13,8 +13,15 @@ class SocialPostNormalizer:
     def normalize(self, row: dict[str, Any]) -> SocialPost:
         author = row.get("author") if isinstance(row.get("author"), dict) else row.get("user", {})
         author = author if isinstance(author, dict) else {}
+        metrics = row.get("metrics") if isinstance(row.get("metrics"), dict) else {}
+
         name = str(author.get("name") or author.get("display_name") or row.get("author") or "")
-        handle = author.get("username") or author.get("screen_name") or author.get("handle")
+        handle = (
+            author.get("screenName")
+            or author.get("username")
+            or author.get("screen_name")
+            or author.get("handle")
+        )
         handle_text = self._handle(handle)
         return SocialPost(
             id=str(row.get("id") or row.get("id_str") or row.get("tweet_id") or row.get("rest_id") or ""),
@@ -22,19 +29,26 @@ class SocialPostNormalizer:
                 name=name or handle_text or "Unknown",
                 handle=handle_text,
                 avatar=self._avatar(author, name, handle_text),
+                verified=bool(author.get("verified", False)),
             ),
             content=str(row.get("text") or row.get("full_text") or row.get("content") or ""),
             published_at=self._published_at(row),
             relative_time=self._relative_time(row),
-            replies=self._int(row.get("reply_count", row.get("replies", 0))),
-            reposts=self._int(row.get("retweet_count", row.get("retweets", row.get("reposts", 0)))),
-            likes=self._int(row.get("favorite_count", row.get("likes", 0))),
-            views=self._optional_int(row.get("view_count", row.get("views"))),
+            replies=self._int(metrics.get("replies", row.get("reply_count", row.get("replies", 0)))),
+            reposts=self._int(metrics.get("retweets", row.get("retweet_count", row.get("retweets", row.get("reposts", 0))))),
+            likes=self._int(metrics.get("likes", row.get("favorite_count", row.get("likes", 0)))),
+            views=self._optional_int(metrics.get("views", row.get("view_count", row.get("views")))),
             raw=row,
         )
 
     def _published_at(self, row: dict[str, Any]) -> str | None:
-        value = row.get("created_at") or row.get("published_at") or row.get("date")
+        value = (
+            row.get("createdAtISO")
+            or row.get("createdAt")
+            or row.get("created_at")
+            or row.get("published_at")
+            or row.get("date")
+        )
         if value is None:
             return None
         return str(value)
@@ -68,7 +82,11 @@ class SocialPostNormalizer:
 
     @staticmethod
     def _avatar(author: dict[str, Any], name: str, handle: str | None) -> str:
-        image = author.get("profile_image_url") or author.get("avatar")
+        image = (
+            author.get("profileImageUrl")
+            or author.get("profile_image_url")
+            or author.get("avatar")
+        )
         if image:
             return str(image)
         seed = name or handle or "?"

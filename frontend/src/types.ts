@@ -60,6 +60,7 @@ export interface Tweet {
   content: string;
   timeAgo: string;
   sentiment?: 'Bullish' | 'Bearish' | 'Neutral';
+  verified?: boolean;
   replies: number;
   retweets: number;
   likes: number;

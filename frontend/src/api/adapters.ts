@@ -138,6 +138,7 @@ function toTweet(post: SocialPost): Tweet {
     avatar: toAvatar(post),
     content: post.content,
     timeAgo: post.relative_time || dateLabel(post.published_at),
+    verified: post.author.verified === true ? true : undefined,
     replies: post.replies,
     retweets: post.reposts,
     likes: post.likes,

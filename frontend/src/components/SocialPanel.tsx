@@ -1,10 +1,37 @@
 import React from "react";
 import { StockData } from "../types";
 import type { SocialLanguage, SocialMinFaves, SocialSort, SourceState } from "../api/backendTypes";
-import { Eye, Heart, Maximize2, MessageCircle, Minimize2, Repeat2 } from "lucide-react";
+import { BadgeCheck, Eye, Heart, Maximize2, MessageCircle, Minimize2, Repeat2 } from "lucide-react";
 import { LoadingState } from "./LoadingState";
 
 const minFavesOptions: SocialMinFaves[] = [1, 5, 10, 30, 50, 100, 500, 1000];
+
+function isAvatarUrl(value: string) {
+  return value.startsWith("http://") || value.startsWith("https://");
+}
+
+function Avatar({ avatar, name }: { avatar: string; name: string }) {
+  if (isAvatarUrl(avatar)) {
+    return (
+      <img
+        src={avatar}
+        alt={name}
+        loading="lazy"
+        className="w-8 h-8 rounded-full object-cover shrink-0 bg-slate-200 dark:bg-slate-700"
+        referrerPolicy="no-referrer"
+        onError={(event) => {
+          const target = event.currentTarget;
+          target.style.display = "none";
+        }}
+      />
+    );
+  }
+  return (
+    <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-xs text-slate-600 dark:text-white shrink-0">
+      {avatar}
+    </div>
+  );
+}
 
 export function SocialPanel({
   data,
@@ -115,15 +142,20 @@ export function SocialPanel({
               className="p-4 bg-white dark:bg-[#161B22] mb-px hover:bg-slate-50 dark:hover:bg-[#30363D]/20 transition-colors"
             >
               <div className="flex items-start gap-4">
-                <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-xs text-slate-600 dark:text-white shrink-0">
-                  {tweet.avatar}
-                </div>
+                <Avatar avatar={tweet.avatar} name={tweet.author} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 truncate">
                       <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
                         {tweet.author}
                       </span>
+                      {tweet.verified && (
+                        <BadgeCheck
+                          size={13}
+                          className="shrink-0 text-sky-500"
+                          aria-label="Verified"
+                        />
+                      )}
                       <span className="text-[10px] text-slate-500 ml-1 truncate">
                         {tweet.handle}
                       </span>

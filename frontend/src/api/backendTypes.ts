@@ -175,6 +175,7 @@ export interface SocialAuthor {
   name: string;
   handle?: string | null;
   avatar?: string | null;
+  verified?: boolean;
 }
 
 export interface SocialPost {
