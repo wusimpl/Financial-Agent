@@ -165,7 +165,7 @@ export function SocialPanel({
                     </div>
                   </div>
 
-                  <p className="mt-2 text-xs text-slate-700 dark:text-slate-300 leading-relaxed break-words">
+                  <p className="mt-2 text-xs text-slate-700 dark:text-slate-300 leading-relaxed break-words whitespace-pre-line">
                     {tweet.content}
                   </p>
 
