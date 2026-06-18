@@ -4,9 +4,7 @@ import { api, ApiError } from '../api/client';
 import type { StockSearchItem } from '../api/backendTypes';
 
 interface TopNavProps {
-  searchQuery: string;
-  setSearchQuery: (q: string) => void;
-  onSelectStock: (ticker: string) => void;
+  onAddStock: (ticker: string) => void;
 }
 
 function matchLabel(matchReason?: string | null) {
@@ -14,8 +12,9 @@ function matchLabel(matchReason?: string | null) {
   return 'Stock match';
 }
 
-export function TopNav({ searchQuery, setSearchQuery, onSelectStock }: TopNavProps) {
+export function TopNav({ onAddStock }: TopNavProps) {
   const [isDark, setIsDark] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<StockSearchItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -30,6 +29,7 @@ export function TopNav({ searchQuery, setSearchQuery, onSelectStock }: TopNavPro
 
   useEffect(() => {
     const query = searchQuery.trim();
+    const controller = new AbortController();
     let cancelled = false;
 
     if (!query) {
@@ -43,12 +43,13 @@ export function TopNav({ searchQuery, setSearchQuery, onSelectStock }: TopNavPro
     setSearchError(null);
 
     const timer = window.setTimeout(() => {
-      api.searchStocks(query)
+      api.searchStocks(query, { signal: controller.signal })
         .then((items) => {
           if (!cancelled) setResults(items);
         })
         .catch((error) => {
           if (cancelled) return;
+          if (error instanceof DOMException && error.name === 'AbortError') return;
           setResults([]);
           setSearchError(error instanceof ApiError ? error.message : 'Unable to search stocks.');
         })
@@ -60,6 +61,7 @@ export function TopNav({ searchQuery, setSearchQuery, onSelectStock }: TopNavPro
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
+      controller.abort();
     };
   }, [searchQuery]);
 
@@ -69,7 +71,7 @@ export function TopNav({ searchQuery, setSearchQuery, onSelectStock }: TopNavPro
   };
 
   const selectStock = (ticker: string) => {
-    onSelectStock(ticker);
+    onAddStock(ticker);
     setSearchQuery('');
     setResults([]);
     setSearchError(null);

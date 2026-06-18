@@ -31,6 +31,13 @@ class WatchlistStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(json.dumps({"tickers": normalized}, ensure_ascii=False), encoding="utf-8")
 
+    def add_ticker(self, ticker: str) -> None:
+        self.save_tickers([*self.list_tickers(), ticker])
+
+    def remove_ticker(self, ticker: str) -> None:
+        normalized = TickerNormalizer.normalize(ticker)
+        self.save_tickers([item for item in self.list_tickers() if item != normalized])
+
     @staticmethod
     def _stable_unique(tickers: list[str]) -> list[str]:
         result: list[str] = []

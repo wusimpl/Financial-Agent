@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { cn } from '../lib/utils';
-import { ChevronLeft, Menu } from 'lucide-react';
+import { ChevronLeft, Menu, Trash2 } from 'lucide-react';
 import type { WatchlistItem } from '../api/backendTypes';
 
 interface SidebarProps {
@@ -9,6 +9,7 @@ interface SidebarProps {
   error?: string | null;
   activeStock: string;
   setActiveStock: (ticker: string) => void;
+  removeStock: (ticker: string) => void;
 }
 
 function CompanyLogo({ ticker, name }: { ticker: string; name: string }) {
@@ -38,7 +39,7 @@ function CompanyLogo({ ticker, name }: { ticker: string; name: string }) {
   );
 }
 
-export function Sidebar({ watchlist, isLoading, error, activeStock, setActiveStock }: SidebarProps) {
+export function Sidebar({ watchlist, isLoading, error, activeStock, setActiveStock, removeStock }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
@@ -78,25 +79,48 @@ export function Sidebar({ watchlist, isLoading, error, activeStock, setActiveSto
           const isActive = activeStock === ticker;
           
           return (
-            <button
+            <div
               key={ticker}
-              onClick={() => setActiveStock(ticker)}
               className={cn(
-                "w-full flex items-center py-3 border-l-2 transition-colors cursor-pointer text-left whitespace-nowrap gap-3",
-                isOpen ? "px-4" : "px-0 justify-center",
+                "w-full flex items-center border-l-2 transition-colors whitespace-nowrap",
+                isOpen ? "pl-4 pr-2" : "px-0 justify-center",
                 isActive ? "bg-white dark:bg-[#161B22] border-blue-500 shadow-sm dark:shadow-none" : "border-transparent hover:bg-slate-100 dark:hover:bg-[#161B22]"
               )}
-              title={!isOpen ? name : undefined}
             >
-              <CompanyLogo ticker={ticker} name={name} />
-              
+              <button
+                type="button"
+                onClick={() => setActiveStock(ticker)}
+                className={cn(
+                  "flex min-w-0 flex-1 items-center gap-3 py-3 text-left",
+                  !isOpen && "justify-center",
+                )}
+                title={!isOpen ? name : undefined}
+              >
+                <CompanyLogo ticker={ticker} name={name} />
+
+                {isOpen && (
+                  <div className="flex flex-col items-start overflow-hidden flex-1">
+                    <div className="text-sm font-bold text-slate-900 dark:text-white uppercase">{ticker}</div>
+                    <div className="text-[10px] text-slate-500 hover:text-slate-700 dark:hover:text-slate-400 truncate w-full">{name}</div>
+                  </div>
+                )}
+              </button>
               {isOpen && (
-                <div className="flex flex-col items-start overflow-hidden flex-1">
-                  <div className="text-sm font-bold text-slate-900 dark:text-white uppercase">{ticker}</div>
-                  <div className="text-[10px] text-slate-500 hover:text-slate-700 dark:hover:text-slate-400 truncate w-full">{name}</div>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm(`从列表中删除 ${ticker}？`)) {
+                      removeStock(ticker);
+                    }
+                  }}
+                  className="rounded p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+                  aria-label={`删除 ${ticker}`}
+                  title={`删除 ${ticker}`}
+                >
+                  <Trash2 size={14} />
+                </button>
               )}
-            </button>
+            </div>
           );
         })}
       </div>

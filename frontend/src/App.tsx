@@ -40,7 +40,6 @@ function emptyStockInfo(ticker: string): StockInfo {
 }
 
 export default function App() {
-  const [searchQuery, setSearchQuery] = useState('');
   const [activeStock, setActiveStock] = useState('AAPL');
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [watchlistLoading, setWatchlistLoading] = useState(true);
@@ -193,6 +192,22 @@ export default function App() {
     setSelectedSocialSort(sort);
   };
 
+  const addWatchlistItem = (ticker: string) => {
+    api.addWatchlistItem(ticker)
+      .then((items) => setWatchlist(items))
+      .catch((error) => {
+        window.alert(error instanceof ApiError ? error.message : '无法更新股票列表。');
+      });
+  };
+
+  const removeWatchlistItem = (ticker: string) => {
+    api.removeWatchlistItem(ticker)
+      .then((items) => setWatchlist(items))
+      .catch((error) => {
+        window.alert(error instanceof ApiError ? error.message : '无法更新股票列表。');
+      });
+  };
+
   const stockData = useMemo<StockData>(() => ({
     info,
     chart: chartData,
@@ -207,9 +222,7 @@ export default function App() {
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[#FAFAFA] dark:bg-[#0B0E14] text-slate-800 dark:text-slate-300 font-sans transition-colors">
       <TopNav
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onSelectStock={setActiveStock}
+        onAddStock={addWatchlistItem}
       />
       
       <div className="flex flex-1 overflow-hidden">
@@ -219,6 +232,7 @@ export default function App() {
           error={watchlistError}
           activeStock={activeStock}
           setActiveStock={setActiveStock}
+          removeStock={removeWatchlistItem}
         />
 
         <main className="flex-1 overflow-x-auto overflow-y-hidden flex flex-col">

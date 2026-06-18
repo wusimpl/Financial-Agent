@@ -59,6 +59,15 @@ class WatchlistService:
             items.append(WatchlistItem(identity=StockSearchService._identity(company), sort_order=index))
         return items
 
+    def add_item(self, ticker: str) -> list[WatchlistItem]:
+        company = self.directory_source.find(ticker)
+        self.store.add_ticker(company["ticker"])
+        return self.list_items()
+
+    def remove_item(self, ticker: str) -> list[WatchlistItem]:
+        self.store.remove_ticker(ticker)
+        return self.list_items()
+
 
 class StockOverviewService:
     def __init__(

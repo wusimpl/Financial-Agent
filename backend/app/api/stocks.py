@@ -25,6 +25,16 @@ def watchlist() -> list[WatchlistItem]:
     return watchlist_service.list_items()
 
 
+@router.post("/watchlist/{ticker}", response_model=list[WatchlistItem])
+def add_watchlist_item(ticker: str) -> list[WatchlistItem]:
+    return watchlist_service.add_item(ticker)
+
+
+@router.delete("/watchlist/{ticker}", response_model=list[WatchlistItem])
+def remove_watchlist_item(ticker: str) -> list[WatchlistItem]:
+    return watchlist_service.remove_item(ticker)
+
+
 @router.get("/{ticker}/overview", response_model=StockOverviewResponse)
 def stock_overview(ticker: str) -> StockOverviewResponse:
     return overview_service.overview(ticker)

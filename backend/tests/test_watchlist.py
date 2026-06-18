@@ -41,3 +41,12 @@ def test_watchlist_store_persists_normalized_unique_tickers(tmp_path):
     store.save_tickers([" aapl ", "AAPL", "tsla"])
 
     assert store.list_tickers() == ["AAPL", "TSLA"]
+
+
+def test_watchlist_store_adds_and_removes_tickers(tmp_path):
+    store = WatchlistStore(settings=_settings(tmp_path / "watchlist.json"))
+
+    store.add_ticker("tsla")
+    store.remove_ticker(" aapl ")
+
+    assert store.list_tickers() == ["MSFT", "TSLA"]

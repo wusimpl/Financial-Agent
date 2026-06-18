@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from typing import Any, Iterable
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -20,6 +21,8 @@ class SecFilingsSource:
     def __init__(self, settings: Settings | None = None, cache: FileCache | None = None) -> None:
         self.settings = settings or get_settings()
         self.cache = cache or FileCache(self.settings.cache_dir)
+        self._company_index_cache: list[dict[str, Any]] | None = None
+        self._company_index_cached_at: float | None = None
 
     def find_company(self, ticker: str) -> dict[str, Any]:
         normalized = self._normalize_ticker(ticker)
@@ -121,6 +124,13 @@ class SecFilingsSource:
         return {"company": company, "facts": data.get("facts", {})}
 
     def _company_index(self) -> list[dict[str, Any]]:
+        if (
+            self._company_index_cache is not None
+            and self._company_index_cached_at is not None
+            and time.time() - self._company_index_cached_at <= self.settings.sec_index_cache_seconds
+        ):
+            return self._company_index_cache
+
         raw = self._get_json("sec-company-index", self.company_tickers_url, self.settings.sec_index_cache_seconds)
         companies: list[dict[str, Any]] = []
         for item in raw.values():
@@ -133,6 +143,8 @@ class SecFilingsSource:
                     "cikPadded": cik.zfill(10),
                 }
             )
+        self._company_index_cache = companies
+        self._company_index_cached_at = time.time()
         return companies
 
     def _submissions(self, company: dict[str, Any]) -> dict[str, Any]:

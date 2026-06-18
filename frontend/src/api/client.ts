@@ -101,8 +101,18 @@ export const api = {
     return request<StockOverviewResponse>(`/stocks/${ticker}/overview`);
   },
 
-  searchStocks(query: string, limit = 10) {
-    return request<StockSearchItem[]>('/stocks/search', { query, limit });
+  searchStocks(query: string, options?: { limit?: number; signal?: AbortSignal }) {
+    return request<StockSearchItem[]>('/stocks/search', { query, limit: options?.limit ?? 10 }, {
+      signal: options?.signal,
+    });
+  },
+
+  addWatchlistItem(ticker: string) {
+    return request<WatchlistItem[]>(`/stocks/watchlist/${ticker}`, undefined, { method: 'POST' });
+  },
+
+  removeWatchlistItem(ticker: string) {
+    return request<WatchlistItem[]>(`/stocks/watchlist/${ticker}`, undefined, { method: 'DELETE' });
   },
 
   chart(ticker: string, range: ChartRange) {
