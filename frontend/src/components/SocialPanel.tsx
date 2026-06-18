@@ -19,7 +19,10 @@ function isAvatarUrl(value: string) {
 }
 
 function Avatar({ avatar, name }: { avatar: string; name: string }) {
-  if (isAvatarUrl(avatar)) {
+  const [errored, setErrored] = useState(false);
+  const fallback = (avatar && !isAvatarUrl(avatar)) ? avatar : (name || "?").slice(0, 1).toUpperCase();
+
+  if (isAvatarUrl(avatar) && !errored) {
     return (
       <img
         src={avatar}
@@ -27,16 +30,13 @@ function Avatar({ avatar, name }: { avatar: string; name: string }) {
         loading="lazy"
         className="w-8 h-8 rounded-full object-cover shrink-0 bg-slate-200 dark:bg-slate-700"
         referrerPolicy="no-referrer"
-        onError={(event) => {
-          const target = event.currentTarget;
-          target.style.display = "none";
-        }}
+        onError={() => setErrored(true)}
       />
     );
   }
   return (
     <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-xs text-slate-600 dark:text-white shrink-0">
-      {avatar}
+      {fallback}
     </div>
   );
 }
