@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { cn } from '../lib/utils';
-import { ChevronLeft, Menu, Trash2 } from 'lucide-react';
+import { Building2, ChevronLeft, Menu, Trash2 } from 'lucide-react';
 import type { WatchlistItem } from '../api/backendTypes';
 
 interface SidebarProps {
@@ -12,29 +12,39 @@ interface SidebarProps {
   removeStock: (ticker: string) => void;
 }
 
+const logoDevToken = String(import.meta.env.VITE_LOGO_DEV_TOKEN || '').trim();
+
+function getLogoUrl(ticker: string) {
+  const params = new URLSearchParams({
+    token: logoDevToken,
+    size: '64',
+    format: 'png',
+    theme: 'dark',
+    fallback: '404',
+    retina: 'true',
+  });
+
+  return `https://img.logo.dev/ticker/${encodeURIComponent(ticker.toLowerCase())}?${params}`;
+}
+
 function CompanyLogo({ ticker, name }: { ticker: string; name: string }) {
   const [error, setError] = useState(false);
-  const domainMap: Record<string, string> = {
-    AAPL: 'apple.com',
-    TSLA: 'tesla.com',
-    MSFT: 'microsoft.com'
-  };
-  const domain = domainMap[ticker] || `${ticker.toLowerCase()}.com`;
+  const logoUrl = logoDevToken && !error ? getLogoUrl(ticker) : null;
   
-  if (error) {
+  if (!logoUrl) {
     return (
-      <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-xs font-bold text-blue-700 dark:text-blue-400 shrink-0">
-        {ticker.slice(0, 1)}
+      <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0 border border-slate-200 dark:border-slate-700">
+        <Building2 size={15} aria-hidden="true" />
       </div>
     );
   }
 
   return (
-    <img 
-      src={`https://logo.clearbit.com/${domain}`} 
-      alt={`${name} logo`} 
+    <img
+      src={logoUrl}
+      alt={`${name} 标志`}
       onError={() => setError(true)}
-      className="w-8 h-8 rounded-full shrink-0 object-cover bg-white border border-slate-100 dark:border-slate-800"
+      className="w-8 h-8 rounded-full shrink-0 object-contain bg-white border border-slate-100 dark:border-slate-800 p-1"
     />
   );
 }

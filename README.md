@@ -61,3 +61,9 @@ cd frontend
 npm install
 npm run dev
 ```
+
+侧边栏公司标志需要配置 Logo.dev 的公开 key：
+
+```bash
+VITE_LOGO_DEV_TOKEN=pk_xxx
+```
