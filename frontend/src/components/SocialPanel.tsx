@@ -42,60 +42,61 @@ function Avatar({ avatar, name }: { avatar: string; name: string }) {
   );
 }
 
-type TweetUserMenuProps = {
+type TweetUserActionsProps = {
   tweet: Tweet;
   favoriteUserHandles: string[];
   onBlockUser?: (handle: string) => void;
   onFavoriteUserToggle?: (handle: string) => void;
 };
 
-function TweetUserMenu({
+function TweetUserActions({
   tweet,
   favoriteUserHandles,
   onBlockUser,
   onFavoriteUserToggle,
-}: TweetUserMenuProps) {
+}: TweetUserActionsProps) {
   const handle = normalizeSocialUserHandle(tweet.handle);
   const isFavorite = handle ? favoriteUserHandles.includes(handle) : false;
 
   if (!handle || (!onBlockUser && !onFavoriteUserToggle)) {
-    return <Avatar avatar={tweet.avatar} name={tweet.author} />;
+    return null;
   }
 
   return (
-    <div className="relative shrink-0 group">
-      <Avatar avatar={tweet.avatar} name={tweet.author} />
-      <div
-        className="absolute left-0 top-9 z-30 hidden min-w-28 overflow-hidden rounded border border-slate-200 bg-white py-1 shadow-lg group-hover:block dark:border-[#30363D] dark:bg-[#161B22]"
-        onClick={(event) => event.stopPropagation()}
-        onKeyDown={(event) => event.stopPropagation()}
-      >
-        {onFavoriteUserToggle && (
-          <button
-            type="button"
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-[#30363D]"
-            aria-label={`${isFavorite ? "取消收藏" : "收藏"} ${handle}`}
-            onClick={() => onFavoriteUserToggle(handle)}
-          >
-            <Star
-              size={13}
-              className={isFavorite ? "fill-amber-400 text-amber-400" : "text-slate-400"}
-            />
-            {isFavorite ? "取消收藏" : "收藏"}
-          </button>
-        )}
-        {onBlockUser && (
-          <button
-            type="button"
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-            aria-label={`屏蔽 ${handle}`}
-            onClick={() => onBlockUser(handle)}
-          >
-            <Ban size={13} />
-            屏蔽
-          </button>
-        )}
-      </div>
+    <div className="flex shrink-0 items-center gap-1">
+      {onFavoriteUserToggle && (
+        <button
+          type="button"
+          className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-amber-500 dark:hover:bg-[#30363D]"
+          aria-label={`${isFavorite ? "取消收藏" : "收藏"} ${handle}`}
+          title={isFavorite ? "取消收藏" : "收藏"}
+          onClick={(event) => {
+            event.stopPropagation();
+            onFavoriteUserToggle(handle);
+          }}
+          onKeyDown={(event) => event.stopPropagation()}
+        >
+          <Star
+            size={13}
+            className={isFavorite ? "fill-amber-400 text-amber-400" : undefined}
+          />
+        </button>
+      )}
+      {onBlockUser && (
+        <button
+          type="button"
+          className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+          aria-label={`屏蔽 ${handle}`}
+          title="屏蔽"
+          onClick={(event) => {
+            event.stopPropagation();
+            onBlockUser(handle);
+          }}
+          onKeyDown={(event) => event.stopPropagation()}
+        >
+          <Ban size={13} />
+        </button>
+      )}
     </div>
   );
 }
@@ -148,15 +149,10 @@ const TweetRow: React.FC<TweetRowProps> = ({
       className="p-4 bg-white dark:bg-[#161B22] mb-px hover:bg-slate-50 dark:hover:bg-[#30363D]/20 transition-colors cursor-pointer"
     >
       <div className="flex items-start gap-4">
-        <TweetUserMenu
-          tweet={tweet}
-          favoriteUserHandles={favoriteUserHandles}
-          onBlockUser={onBlockUser}
-          onFavoriteUserToggle={onFavoriteUserToggle}
-        />
+        <Avatar avatar={tweet.avatar} name={tweet.author} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 truncate">
+            <div className="flex items-center gap-1.5 min-w-0">
               <span className="font-bold text-xs text-slate-900 dark:text-white truncate">
                 {tweet.author}
               </span>
@@ -174,6 +170,12 @@ const TweetRow: React.FC<TweetRowProps> = ({
                 · {tweet.timeAgo}
               </span>
             </div>
+            <TweetUserActions
+              tweet={tweet}
+              favoriteUserHandles={favoriteUserHandles}
+              onBlockUser={onBlockUser}
+              onFavoriteUserToggle={onFavoriteUserToggle}
+            />
           </div>
 
           <p className="mt-2 text-xs text-slate-700 dark:text-slate-300 leading-relaxed break-words whitespace-pre-line">
