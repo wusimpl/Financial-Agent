@@ -19,7 +19,7 @@ function getLogoUrl(ticker: string) {
     token: logoDevToken,
     size: '64',
     format: 'png',
-    theme: 'dark',
+    theme: 'light',
     fallback: '404',
     retina: 'true',
   });
@@ -30,7 +30,7 @@ function getLogoUrl(ticker: string) {
 function CompanyLogo({ ticker, name }: { ticker: string; name: string }) {
   const [error, setError] = useState(false);
   const logoUrl = logoDevToken && !error ? getLogoUrl(ticker) : null;
-  
+
   if (!logoUrl) {
     return (
       <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 shrink-0 border border-slate-200 dark:border-slate-700">
@@ -43,6 +43,8 @@ function CompanyLogo({ ticker, name }: { ticker: string; name: string }) {
     <img
       src={logoUrl}
       alt={`${name} 标志`}
+      loading="lazy"
+      decoding="async"
       onError={() => setError(true)}
       className="w-8 h-8 rounded-full shrink-0 object-contain bg-white border border-slate-100 dark:border-slate-800 p-1"
     />
