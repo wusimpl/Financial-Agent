@@ -47,5 +47,6 @@ def document_html_by_year(
     year: int = Query(..., ge=1900, le=2100),
     filing_type: str = Query("10-K", alias="type"),
     year_basis: str = Query("report"),
+    theme: str | None = Query(None),
 ) -> str:
-    return sec_service.document_html_by_year(ticker, year=year, filing_type=filing_type, year_basis=year_basis)
+    return sec_service.document_html_by_year(ticker, year=year, filing_type=filing_type, year_basis=year_basis, theme=theme)

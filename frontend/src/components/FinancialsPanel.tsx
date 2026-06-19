@@ -132,7 +132,7 @@ export function FinancialsPanel({
       </div>
 
       <div className="flex-1 overflow-hidden bg-slate-100 dark:bg-[#0B0E14] p-4">
-        <div className="h-full overflow-hidden bg-white shadow-xl dark:shadow-[0_0_15px_rgba(0,0,0,0.5)] dark:border dark:border-[#30363D]">
+        <div className="h-full overflow-hidden bg-white dark:bg-[#0B0E14] shadow-xl dark:shadow-[0_0_15px_rgba(0,0,0,0.5)] dark:border dark:border-[#30363D]">
           {filingsLoading ? (
             <LoadingState label="Loading filing..." />
           ) : filingsError ? (
@@ -144,7 +144,7 @@ export function FinancialsPanel({
               key={filingFrameUrl}
               title={`${data.info.ticker} SEC filing`}
               src={filingFrameUrl}
-              className="h-full w-full border-0 bg-white"
+              className="h-full w-full border-0 bg-[#0B0E14]"
             />
           ) : (
             <div className="flex h-full items-center justify-center px-6 text-sm text-slate-500">

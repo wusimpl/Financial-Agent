@@ -72,10 +72,11 @@ class SecFilingService:
         year: int,
         filing_type: str = "10-K",
         year_basis: str = "report",
+        theme: str | None = None,
     ) -> str:
         normalized = TickerNormalizer.normalize(ticker)
         raw = self.sec_source.filing_document_by_year(normalized, year=year, form=filing_type, year_basis=year_basis)
-        return self._document_with_base(raw["document"], raw["url"])
+        return self._document_with_base(raw["document"], raw["url"], dark=theme == "dark")
 
     def _document_response(
         self,
@@ -113,8 +114,100 @@ class SecFilingService:
         )
 
     @staticmethod
-    def _document_with_base(document: str, url: str) -> str:
+    def _document_with_base(document: str, url: str, dark: bool = False) -> str:
         base = f'<base href="{html.escape(url, quote=True)}">'
+        anchor_script = """
+<script id="financial-agent-sec-anchor-navigation">
+(function () {
+  function fragmentFromHref(href) {
+    if (!href || href.charAt(0) !== "#") return "";
+    return href.slice(1);
+  }
+
+  function findTarget(fragment) {
+    if (!fragment) return null;
+
+    var decoded = fragment;
+    try {
+      decoded = decodeURIComponent(fragment);
+    } catch (error) {
+      decoded = fragment;
+    }
+
+    return document.getElementById(decoded) ||
+      document.getElementsByName(decoded)[0] ||
+      document.getElementById(fragment) ||
+      document.getElementsByName(fragment)[0];
+  }
+
+  document.addEventListener("click", function (event) {
+    var clicked = event.target;
+    if (!clicked || !clicked.closest) return;
+
+    var link = clicked.closest("a[href]");
+    if (!link) return;
+
+    var fragment = fragmentFromHref(link.getAttribute("href"));
+    var target = findTarget(fragment);
+    if (!target) return;
+
+    event.preventDefault();
+    target.scrollIntoView({ block: "start" });
+    history.replaceState(null, "", "#" + fragment);
+  });
+})();
+</script>
+""".strip()
+        dark_style = """
+<style id="financial-agent-sec-dark-mode">
+:root {
+  color-scheme: dark;
+}
+html,
+body {
+  background: #0B0E14 !important;
+  color: #CBD5E1 !important;
+}
+body * {
+  background-color: transparent !important;
+  color: #CBD5E1 !important;
+  border-color: #30363D !important;
+}
+table,
+thead,
+tbody,
+tfoot,
+tr,
+td,
+th {
+  background-color: #0F141C !important;
+  border-color: #30363D !important;
+}
+a,
+a * {
+  color: #93C5FD !important;
+}
+hr {
+  border-color: #30363D !important;
+}
+input,
+textarea,
+select,
+button {
+  background-color: #111827 !important;
+  color: #E5E7EB !important;
+  border-color: #374151 !important;
+}
+img,
+picture,
+video,
+canvas,
+svg {
+  filter: brightness(0.92) contrast(1.05);
+}
+</style>
+""".strip()
+        injections = f"{base}{anchor_script}" if not dark else f"{base}{anchor_script}{dark_style}"
         if re.search(r"<head[\s>]", document, flags=re.IGNORECASE):
-            return re.sub(r"(<head[^>]*>)", rf"\1{base}", document, count=1, flags=re.IGNORECASE)
-        return f"{base}{document}"
+            return re.sub(r"(<head[^>]*>)", lambda match: f"{match.group(1)}{injections}", document, count=1, flags=re.IGNORECASE)
+        return f"{injections}{document}"

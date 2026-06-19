@@ -1,4 +1,5 @@
 from app.sources.sec import SecFilingsSource
+from app.services.sec import SecFilingService
 
 
 class FakeSecSource(SecFilingsSource):
@@ -62,3 +63,32 @@ def test_list_filings_reads_historical_files_for_year_filter():
     result = source.list_filings("demo", forms=("10-K",), year=2013)
 
     assert result["items"][0]["primaryDocument"] == "demo-20131231.htm"
+
+
+def test_document_with_base_adds_default_injections_without_dark_mode():
+    document = "<html><head></head><body>Demo</body></html>"
+
+    result = SecFilingService._document_with_base(document, "https://www.sec.gov/demo.htm")
+
+    assert '<base href="https://www.sec.gov/demo.htm">' in result
+    assert "financial-agent-sec-anchor-navigation" in result
+    assert "financial-agent-sec-dark-mode" not in result
+
+
+def test_document_with_base_can_add_dark_mode_styles():
+    document = "<html><head></head><body>Demo</body></html>"
+
+    result = SecFilingService._document_with_base(document, "https://www.sec.gov/demo.htm", dark=True)
+
+    assert "financial-agent-sec-dark-mode" in result
+    assert "background: #0B0E14 !important" in result
+
+
+def test_document_with_base_intercepts_local_anchor_links():
+    document = '<html><head></head><body><a href="#item-1">Business</a><h1 id="item-1">Item 1.</h1></body></html>'
+
+    result = SecFilingService._document_with_base(document, "https://www.sec.gov/demo.htm")
+
+    assert 'link.getAttribute("href")' in result
+    assert 'href.charAt(0) !== "#"' in result
+    assert "target.scrollIntoView" in result

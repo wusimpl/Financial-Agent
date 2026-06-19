@@ -139,6 +139,7 @@ export const api = {
     return buildUrl(`/sec/${ticker}/document-html-by-year`, {
       year,
       type: filingType,
+      theme: 'dark',
     });
   },
 
