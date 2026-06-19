@@ -2,8 +2,9 @@ import React, { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { StockData, Tweet } from "../types";
 import type { SocialLanguage, SocialMinFaves, SocialSort, SourceState } from "../api/backendTypes";
-import { BadgeCheck, Eye, Heart, Maximize2, MessageCircle, Minimize2, Repeat2, X } from "lucide-react";
+import { BadgeCheck, Ban, Eye, Heart, Maximize2, MessageCircle, Minimize2, Repeat2, Star, X } from "lucide-react";
 import { LoadingState } from "./LoadingState";
+import { normalizeSocialUserHandle } from "../lib/preferences";
 
 const minFavesOptions: SocialMinFaves[] = [1, 5, 10, 30, 50, 100, 500, 1000];
 const PREVIEW_LIMIT = 200;
@@ -41,6 +42,64 @@ function Avatar({ avatar, name }: { avatar: string; name: string }) {
   );
 }
 
+type TweetUserMenuProps = {
+  tweet: Tweet;
+  favoriteUserHandles: string[];
+  onBlockUser?: (handle: string) => void;
+  onFavoriteUserToggle?: (handle: string) => void;
+};
+
+function TweetUserMenu({
+  tweet,
+  favoriteUserHandles,
+  onBlockUser,
+  onFavoriteUserToggle,
+}: TweetUserMenuProps) {
+  const handle = normalizeSocialUserHandle(tweet.handle);
+  const isFavorite = handle ? favoriteUserHandles.includes(handle) : false;
+
+  if (!handle || (!onBlockUser && !onFavoriteUserToggle)) {
+    return <Avatar avatar={tweet.avatar} name={tweet.author} />;
+  }
+
+  return (
+    <div className="relative shrink-0 group">
+      <Avatar avatar={tweet.avatar} name={tweet.author} />
+      <div
+        className="absolute left-0 top-9 z-30 hidden min-w-28 overflow-hidden rounded border border-slate-200 bg-white py-1 shadow-lg group-hover:block dark:border-[#30363D] dark:bg-[#161B22]"
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
+      >
+        {onFavoriteUserToggle && (
+          <button
+            type="button"
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-[#30363D]"
+            aria-label={`${isFavorite ? "取消收藏" : "收藏"} ${handle}`}
+            onClick={() => onFavoriteUserToggle(handle)}
+          >
+            <Star
+              size={13}
+              className={isFavorite ? "fill-amber-400 text-amber-400" : "text-slate-400"}
+            />
+            {isFavorite ? "取消收藏" : "收藏"}
+          </button>
+        )}
+        {onBlockUser && (
+          <button
+            type="button"
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+            aria-label={`屏蔽 ${handle}`}
+            onClick={() => onBlockUser(handle)}
+          >
+            <Ban size={13} />
+            屏蔽
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function TweetMetrics({ tweet, size = 12 }: { tweet: Tweet; size?: number }) {
   return (
     <div className="flex items-center gap-5 text-slate-500 text-[10px] font-mono">
@@ -63,9 +122,18 @@ function TweetMetrics({ tweet, size = 12 }: { tweet: Tweet; size?: number }) {
 type TweetRowProps = {
   tweet: Tweet;
   onOpen: (tweet: Tweet) => void;
+  favoriteUserHandles: string[];
+  onBlockUser?: (handle: string) => void;
+  onFavoriteUserToggle?: (handle: string) => void;
 };
 
-const TweetRow: React.FC<TweetRowProps> = ({ tweet, onOpen }) => {
+const TweetRow: React.FC<TweetRowProps> = ({
+  tweet,
+  onOpen,
+  favoriteUserHandles,
+  onBlockUser,
+  onFavoriteUserToggle,
+}) => {
   return (
     <div
       role="button"
@@ -80,7 +148,12 @@ const TweetRow: React.FC<TweetRowProps> = ({ tweet, onOpen }) => {
       className="p-4 bg-white dark:bg-[#161B22] mb-px hover:bg-slate-50 dark:hover:bg-[#30363D]/20 transition-colors cursor-pointer"
     >
       <div className="flex items-start gap-4">
-        <Avatar avatar={tweet.avatar} name={tweet.author} />
+        <TweetUserMenu
+          tweet={tweet}
+          favoriteUserHandles={favoriteUserHandles}
+          onBlockUser={onBlockUser}
+          onFavoriteUserToggle={onFavoriteUserToggle}
+        />
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 truncate">
@@ -193,6 +266,9 @@ export function SocialPanel({
   onSortChange,
   onLanguageChange,
   onMinFavesChange,
+  favoriteUserHandles = [],
+  onBlockUser,
+  onFavoriteUserToggle,
   onExpand,
   isExpanded,
 }: {
@@ -206,6 +282,9 @@ export function SocialPanel({
   onSortChange?: (sort: SocialSort) => void;
   onLanguageChange?: (language: SocialLanguage) => void;
   onMinFavesChange?: (minFaves: SocialMinFaves) => void;
+  favoriteUserHandles?: string[];
+  onBlockUser?: (handle: string) => void;
+  onFavoriteUserToggle?: (handle: string) => void;
   onExpand?: () => void;
   isExpanded?: boolean;
 }) {
@@ -290,7 +369,14 @@ export function SocialPanel({
       <div className="flex-1 overflow-y-auto w-full bg-slate-50 dark:bg-[#30363D]/20 space-y-px">
         <div className="divide-y divide-slate-100 dark:divide-[#30363D]/50">
           {data.tweets.map((tweet) => (
-            <TweetRow key={tweet.id} tweet={tweet} onOpen={openTweet} />
+            <TweetRow
+              key={tweet.id}
+              tweet={tweet}
+              onOpen={openTweet}
+              favoriteUserHandles={favoriteUserHandles}
+              onBlockUser={onBlockUser}
+              onFavoriteUserToggle={onFavoriteUserToggle}
+            />
           ))}
         </div>
       </div>

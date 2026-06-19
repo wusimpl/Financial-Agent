@@ -11,6 +11,8 @@ const storageKeys = {
   socialSort: "financial-agent:social-sort",
   socialLanguage: "financial-agent:social-language",
   socialMinFaves: "financial-agent:social-min-faves",
+  blockedSocialUsers: "financial-agent:blocked-social-users",
+  favoriteSocialUsers: "financial-agent:favorite-social-users",
   movingAverages: "financial-agent:moving-averages",
 };
 
@@ -51,6 +53,41 @@ function writeValue(key: string, value: string) {
 function readOption<T extends string>(key: string, options: readonly T[], fallback: T) {
   const value = readValue(key);
   return value && options.includes(value as T) ? (value as T) : fallback;
+}
+
+function readSocialUserList(key: string) {
+  const saved = readValue(key);
+  if (!saved) return [];
+
+  try {
+    const value = JSON.parse(saved);
+    if (!Array.isArray(value)) return [];
+    return Array.from(
+      new Set(
+        value
+          .map((item) => normalizeSocialUserHandle(String(item)))
+          .filter(Boolean),
+      ),
+    );
+  } catch {
+    return [];
+  }
+}
+
+function saveSocialUserList(key: string, handles: string[]) {
+  writeValue(
+    key,
+    JSON.stringify(
+      Array.from(
+        new Set(handles.map((handle) => normalizeSocialUserHandle(handle)).filter(Boolean)),
+      ),
+    ),
+  );
+}
+
+export function normalizeSocialUserHandle(handle: string) {
+  const value = handle.trim().replace(/^@+/, "").toLowerCase();
+  return value ? `@${value}` : "";
 }
 
 export function readThemePreference() {
@@ -101,6 +138,22 @@ export function readSocialMinFavesPreference() {
 
 export function saveSocialMinFavesPreference(minFaves: SocialMinFaves) {
   writeValue(storageKeys.socialMinFaves, String(minFaves));
+}
+
+export function readBlockedSocialUserPreference() {
+  return readSocialUserList(storageKeys.blockedSocialUsers);
+}
+
+export function saveBlockedSocialUserPreference(handles: string[]) {
+  saveSocialUserList(storageKeys.blockedSocialUsers, handles);
+}
+
+export function readFavoriteSocialUserPreference() {
+  return readSocialUserList(storageKeys.favoriteSocialUsers);
+}
+
+export function saveFavoriteSocialUserPreference(handles: string[]) {
+  saveSocialUserList(storageKeys.favoriteSocialUsers, handles);
 }
 
 export function readMovingAverageVisibilityPreference() {

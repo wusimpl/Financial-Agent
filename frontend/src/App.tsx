@@ -13,15 +13,20 @@ import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'reac
 import type { ChartDataPoint, FinancialYear, StockData, StockInfo, Tweet } from './types';
 import type { ChartRange, SocialLanguage, SocialMinFaves, SocialSort, WatchlistItem } from './api/backendTypes';
 import {
+  normalizeSocialUserHandle,
   readActiveStockPreference,
+  readBlockedSocialUserPreference,
   readChartRangePreference,
+  readFavoriteSocialUserPreference,
   readMovingAverageVisibilityPreference,
   readSocialLanguagePreference,
   readSocialMinFavesPreference,
   readSocialSortPreference,
   readThemePreference,
   saveActiveStockPreference,
+  saveBlockedSocialUserPreference,
   saveChartRangePreference,
+  saveFavoriteSocialUserPreference,
   saveMovingAverageVisibilityPreference,
   saveSocialLanguagePreference,
   saveSocialMinFavesPreference,
@@ -76,6 +81,8 @@ export default function App() {
   const [selectedSocialLanguage, setSelectedSocialLanguage] = useState<SocialLanguage>(() => readSocialLanguagePreference());
   const [selectedSocialMinFaves, setSelectedSocialMinFaves] = useState<SocialMinFaves>(() => readSocialMinFavesPreference());
   const [tweets, setTweets] = useState<Tweet[]>([]);
+  const [blockedSocialUsers, setBlockedSocialUsers] = useState<string[]>(() => readBlockedSocialUserPreference());
+  const [favoriteSocialUsers, setFavoriteSocialUsers] = useState<string[]>(() => readFavoriteSocialUserPreference());
   const [socialLoading, setSocialLoading] = useState(true);
   const [socialError, setSocialError] = useState<string | null>(null);
   const [expandedPanel, setExpandedPanel] = useState<'financials' | 'chart' | 'social' | null>(null);
@@ -110,6 +117,14 @@ export default function App() {
   useEffect(() => {
     saveSocialMinFavesPreference(selectedSocialMinFaves);
   }, [selectedSocialMinFaves]);
+
+  useEffect(() => {
+    saveBlockedSocialUserPreference(blockedSocialUsers);
+  }, [blockedSocialUsers]);
+
+  useEffect(() => {
+    saveFavoriteSocialUserPreference(favoriteSocialUsers);
+  }, [favoriteSocialUsers]);
 
   useEffect(() => {
     saveMovingAverageVisibilityPreference(movingAverageVisibility);
@@ -253,6 +268,28 @@ export default function App() {
     setSelectedSocialMinFaves(minFaves);
   };
 
+  const blockSocialUser = (handle: string) => {
+    const normalized = normalizeSocialUserHandle(handle);
+    if (!normalized) return;
+
+    setBlockedSocialUsers((current) => (
+      current.includes(normalized) ? current : [...current, normalized]
+    ));
+    setFavoriteSocialUsers((current) => current.filter((item) => item !== normalized));
+  };
+
+  const toggleFavoriteSocialUser = (handle: string) => {
+    const normalized = normalizeSocialUserHandle(handle);
+    if (!normalized) return;
+
+    setFavoriteSocialUsers((current) => (
+      current.includes(normalized)
+        ? current.filter((item) => item !== normalized)
+        : [...current, normalized]
+    ));
+    setBlockedSocialUsers((current) => current.filter((item) => item !== normalized));
+  };
+
   const toggleTheme = () => {
     setTheme((current) => current === 'dark' ? 'light' : 'dark');
   };
@@ -280,14 +317,34 @@ export default function App() {
       });
   };
 
+  const visibleTweets = useMemo(() => {
+    const blocked = new Set(blockedSocialUsers);
+    const favorite = new Set(favoriteSocialUsers);
+
+    return tweets
+      .map((tweet, index) => ({
+        tweet,
+        index,
+        handle: normalizeSocialUserHandle(tweet.handle),
+      }))
+      .filter(({ handle }) => !handle || !blocked.has(handle))
+      .sort((left, right) => {
+        const leftFavorite = left.handle ? favorite.has(left.handle) : false;
+        const rightFavorite = right.handle ? favorite.has(right.handle) : false;
+        if (leftFavorite === rightFavorite) return left.index - right.index;
+        return leftFavorite ? -1 : 1;
+      })
+      .map(({ tweet }) => tweet);
+  }, [blockedSocialUsers, favoriteSocialUsers, tweets]);
+
   const stockData = useMemo<StockData>(() => ({
     info,
     chart: chartData,
     financials,
-    tweets,
+    tweets: visibleTweets,
     chartRange: selectedChartRange,
     sources: {},
-  }), [chartData, financials, info, selectedChartRange, tweets]);
+  }), [chartData, financials, info, selectedChartRange, visibleTweets]);
 
   const hasChange = hasNumber(info?.change) && hasNumber(info?.changePercent);
 
@@ -404,6 +461,9 @@ export default function App() {
                         onSortChange={loadSocialSort}
                         onLanguageChange={loadSocialLanguage}
                         onMinFavesChange={loadSocialMinFaves}
+                        favoriteUserHandles={favoriteSocialUsers}
+                        onBlockUser={blockSocialUser}
+                        onFavoriteUserToggle={toggleFavoriteSocialUser}
                         isExpanded={expandedPanel === 'social'} 
                         onExpand={() => setExpandedPanel(expandedPanel === 'social' ? null : 'social')} 
                       />
