@@ -424,32 +424,8 @@ export default function App() {
                   </PanelResizeHandle>
                 )}
                 
-                {(!expandedPanel || expandedPanel === 'chart') && (
-                  <Panel defaultSize={expandedPanel === 'chart' ? 100 : 34} minSize={20}>
-                    <div className="h-full overflow-hidden bg-white dark:bg-[#161B22]">
-                      <ChartPanel 
-                        data={stockData} 
-                        range={selectedChartRange}
-                        isLoading={chartLoading}
-                        error={chartError}
-                        onRangeChange={loadChartRange}
-                        movingAverageVisibility={movingAverageVisibility}
-                        onMovingAverageToggle={toggleMovingAverage}
-                        isExpanded={expandedPanel === 'chart'} 
-                        onExpand={() => setExpandedPanel(expandedPanel === 'chart' ? null : 'chart')} 
-                      />
-                    </div>
-                  </Panel>
-                )}
-
-                {(!expandedPanel) && (
-                  <PanelResizeHandle className="group relative w-1 cursor-col-resize flex flex-col justify-center items-center shrink-0 z-10 transition-colors bg-white dark:bg-[#161B22]">
-                    <div className="w-[1px] h-full bg-slate-200 dark:bg-[#30363D] group-hover:bg-blue-500 transition-colors" />
-                  </PanelResizeHandle>
-                )}
-                
                 {(!expandedPanel || expandedPanel === 'social') && (
-                  <Panel defaultSize={expandedPanel === 'social' ? 100 : 33} minSize={20}>
+                  <Panel defaultSize={expandedPanel === 'social' ? 100 : 34} minSize={20}>
                     <div className="h-full overflow-hidden bg-white dark:bg-[#161B22]">
                       <SocialPanel 
                         data={stockData} 
@@ -466,6 +442,30 @@ export default function App() {
                         onFavoriteUserToggle={toggleFavoriteSocialUser}
                         isExpanded={expandedPanel === 'social'} 
                         onExpand={() => setExpandedPanel(expandedPanel === 'social' ? null : 'social')} 
+                      />
+                    </div>
+                  </Panel>
+                )}
+
+                {(!expandedPanel) && (
+                  <PanelResizeHandle className="group relative w-1 cursor-col-resize flex flex-col justify-center items-center shrink-0 z-10 transition-colors bg-white dark:bg-[#161B22]">
+                    <div className="w-[1px] h-full bg-slate-200 dark:bg-[#30363D] group-hover:bg-blue-500 transition-colors" />
+                  </PanelResizeHandle>
+                )}
+
+                {(!expandedPanel || expandedPanel === 'chart') && (
+                  <Panel defaultSize={expandedPanel === 'chart' ? 100 : 33} minSize={20}>
+                    <div className="h-full overflow-hidden bg-white dark:bg-[#161B22]">
+                      <ChartPanel
+                        data={stockData}
+                        range={selectedChartRange}
+                        isLoading={chartLoading}
+                        error={chartError}
+                        onRangeChange={loadChartRange}
+                        movingAverageVisibility={movingAverageVisibility}
+                        onMovingAverageToggle={toggleMovingAverage}
+                        isExpanded={expandedPanel === 'chart'}
+                        onExpand={() => setExpandedPanel(expandedPanel === 'chart' ? null : 'chart')}
                       />
                     </div>
                   </Panel>
