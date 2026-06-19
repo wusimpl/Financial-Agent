@@ -12,6 +12,24 @@ import { formatCurrency, formatNumber, hasNumber } from './lib/format';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import type { ChartDataPoint, FinancialYear, StockData, StockInfo, Tweet } from './types';
 import type { ChartRange, SocialLanguage, SocialMinFaves, SocialSort, WatchlistItem } from './api/backendTypes';
+import {
+  readActiveStockPreference,
+  readChartRangePreference,
+  readMovingAverageVisibilityPreference,
+  readSocialLanguagePreference,
+  readSocialMinFavesPreference,
+  readSocialSortPreference,
+  readThemePreference,
+  saveActiveStockPreference,
+  saveChartRangePreference,
+  saveMovingAverageVisibilityPreference,
+  saveSocialLanguagePreference,
+  saveSocialMinFavesPreference,
+  saveSocialSortPreference,
+  saveThemePreference,
+  type MovingAverageKey,
+  type ThemePreference,
+} from './lib/preferences';
 
 function emptyStockInfo(ticker: string): StockInfo {
   return {
@@ -40,35 +58,62 @@ function emptyStockInfo(ticker: string): StockInfo {
 }
 
 export default function App() {
-  const [activeStock, setActiveStock] = useState('AAPL');
+  const [activeStock, setActiveStock] = useState(() => readActiveStockPreference());
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [watchlistLoading, setWatchlistLoading] = useState(true);
   const [watchlistError, setWatchlistError] = useState<string | null>(null);
-  const [info, setInfo] = useState<StockInfo>(() => emptyStockInfo('AAPL'));
+  const [info, setInfo] = useState<StockInfo>(() => emptyStockInfo(readActiveStockPreference()));
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [overviewError, setOverviewError] = useState<string | null>(null);
-  const [selectedChartRange, setSelectedChartRange] = useState<ChartRange>('1Y');
+  const [selectedChartRange, setSelectedChartRange] = useState<ChartRange>(() => readChartRangePreference());
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [chartLoading, setChartLoading] = useState(true);
   const [chartError, setChartError] = useState<string | null>(null);
   const [financials, setFinancials] = useState<FinancialYear[]>([]);
   const [financialsLoading, setFinancialsLoading] = useState(true);
   const [financialsError, setFinancialsError] = useState<string | null>(null);
-  const [selectedSocialSort, setSelectedSocialSort] = useState<SocialSort>('hot');
-  const [selectedSocialLanguage, setSelectedSocialLanguage] = useState<SocialLanguage>('zh');
-  const [selectedSocialMinFaves, setSelectedSocialMinFaves] = useState<SocialMinFaves>(30);
+  const [selectedSocialSort, setSelectedSocialSort] = useState<SocialSort>(() => readSocialSortPreference());
+  const [selectedSocialLanguage, setSelectedSocialLanguage] = useState<SocialLanguage>(() => readSocialLanguagePreference());
+  const [selectedSocialMinFaves, setSelectedSocialMinFaves] = useState<SocialMinFaves>(() => readSocialMinFavesPreference());
   const [tweets, setTweets] = useState<Tweet[]>([]);
   const [socialLoading, setSocialLoading] = useState(true);
   const [socialError, setSocialError] = useState<string | null>(null);
   const [expandedPanel, setExpandedPanel] = useState<'financials' | 'chart' | 'social' | null>(null);
+  const [theme, setTheme] = useState<ThemePreference>(() => readThemePreference());
+  const [movingAverageVisibility, setMovingAverageVisibility] = useState(() => readMovingAverageVisibilityPreference());
   const overviewRequestId = useRef(0);
   const chartRequestId = useRef(0);
   const financialsRequestId = useRef(0);
   const socialRequestId = useRef(0);
 
   useEffect(() => {
-    document.documentElement.classList.add('dark');
-  }, []);
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    saveThemePreference(theme);
+  }, [theme]);
+
+  useEffect(() => {
+    saveActiveStockPreference(activeStock);
+  }, [activeStock]);
+
+  useEffect(() => {
+    saveChartRangePreference(selectedChartRange);
+  }, [selectedChartRange]);
+
+  useEffect(() => {
+    saveSocialSortPreference(selectedSocialSort);
+  }, [selectedSocialSort]);
+
+  useEffect(() => {
+    saveSocialLanguagePreference(selectedSocialLanguage);
+  }, [selectedSocialLanguage]);
+
+  useEffect(() => {
+    saveSocialMinFavesPreference(selectedSocialMinFaves);
+  }, [selectedSocialMinFaves]);
+
+  useEffect(() => {
+    saveMovingAverageVisibilityPreference(movingAverageVisibility);
+  }, [movingAverageVisibility]);
 
   useEffect(() => {
     let cancelled = false;
@@ -208,6 +253,17 @@ export default function App() {
     setSelectedSocialMinFaves(minFaves);
   };
 
+  const toggleTheme = () => {
+    setTheme((current) => current === 'dark' ? 'light' : 'dark');
+  };
+
+  const toggleMovingAverage = (key: MovingAverageKey) => {
+    setMovingAverageVisibility((current) => ({
+      ...current,
+      [key]: !current[key],
+    }));
+  };
+
   const addWatchlistItem = (ticker: string) => {
     api.addWatchlistItem(ticker)
       .then((items) => setWatchlist(items))
@@ -239,6 +295,8 @@ export default function App() {
     <div className="flex flex-col h-screen overflow-hidden bg-[#FAFAFA] dark:bg-[#0B0E14] text-slate-800 dark:text-slate-300 font-sans transition-colors">
       <TopNav
         onAddStock={addWatchlistItem}
+        isDark={theme === 'dark'}
+        onThemeToggle={toggleTheme}
       />
       
       <div className="flex flex-1 overflow-hidden">
@@ -318,6 +376,8 @@ export default function App() {
                         isLoading={chartLoading}
                         error={chartError}
                         onRangeChange={loadChartRange}
+                        movingAverageVisibility={movingAverageVisibility}
+                        onMovingAverageToggle={toggleMovingAverage}
                         isExpanded={expandedPanel === 'chart'} 
                         onExpand={() => setExpandedPanel(expandedPanel === 'chart' ? null : 'chart')} 
                       />

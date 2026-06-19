@@ -5,6 +5,8 @@ import type { StockSearchItem } from '../api/backendTypes';
 
 interface TopNavProps {
   onAddStock: (ticker: string) => void;
+  isDark: boolean;
+  onThemeToggle: () => void;
 }
 
 function matchLabel(matchReason?: string | null) {
@@ -12,20 +14,11 @@ function matchLabel(matchReason?: string | null) {
   return 'Stock match';
 }
 
-export function TopNav({ onAddStock }: TopNavProps) {
-  const [isDark, setIsDark] = useState(true);
+export function TopNav({ onAddStock, isDark, onThemeToggle }: TopNavProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<StockSearchItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Sync initial state if needed, but we default to true anyway
-    const hasDarkClass = document.documentElement.classList.contains('dark');
-    if (hasDarkClass !== isDark) {
-      setIsDark(hasDarkClass);
-    }
-  }, []);
 
   useEffect(() => {
     const query = searchQuery.trim();
@@ -64,11 +57,6 @@ export function TopNav({ onAddStock }: TopNavProps) {
       controller.abort();
     };
   }, [searchQuery]);
-
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-    document.documentElement.classList.toggle('dark');
-  };
 
   const selectStock = (ticker: string) => {
     onAddStock(ticker);
@@ -136,7 +124,7 @@ export function TopNav({ onAddStock }: TopNavProps) {
       </div>
 
       <div className="flex items-center gap-2 text-slate-500">
-        <button onClick={toggleTheme} className="p-2 hover:bg-slate-100 dark:hover:bg-[#161B22] rounded-full transition-colors" title="Toggle Theme">
+        <button onClick={onThemeToggle} className="p-2 hover:bg-slate-100 dark:hover:bg-[#161B22] rounded-full transition-colors" title="Toggle Theme">
           {isDark ? <Sun size={18} className="text-slate-400" /> : <Moon size={18} className="text-slate-600" />}
         </button>
         <button className="p-2 hover:bg-slate-100 dark:hover:bg-[#161B22] rounded-full transition-colors" title="Settings">

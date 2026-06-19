@@ -16,6 +16,34 @@ import {
 import { Maximize2, Minimize2 } from "lucide-react";
 import { formatNumber, hasNumber } from "../lib/format";
 import { LoadingState } from "./LoadingState";
+import { cn } from "../lib/utils";
+import { defaultMovingAverageVisibility, type MovingAverageKey, type MovingAverageVisibility } from "../lib/preferences";
+
+const movingAverageItems: Array<{
+  key: MovingAverageKey;
+  label: string;
+  stroke: string;
+  activeClassName: string;
+}> = [
+  {
+    key: "ma20",
+    label: "MA(20)",
+    stroke: "#3b82f6",
+    activeClassName: "border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300",
+  },
+  {
+    key: "ma50",
+    label: "MA(50)",
+    stroke: "#f97316",
+    activeClassName: "border-orange-500 bg-orange-50 text-orange-600 dark:bg-orange-950/40 dark:text-orange-300",
+  },
+  {
+    key: "ma200",
+    label: "MA(200)",
+    stroke: "#a855f7",
+    activeClassName: "border-purple-500 bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300",
+  },
+];
 
 export function ChartPanel({
   data,
@@ -24,6 +52,8 @@ export function ChartPanel({
   isLoading,
   error,
   onRangeChange,
+  movingAverageVisibility = defaultMovingAverageVisibility,
+  onMovingAverageToggle,
   onExpand,
   isExpanded,
 }: {
@@ -33,6 +63,8 @@ export function ChartPanel({
   isLoading?: boolean;
   error?: string | null;
   onRangeChange?: (range: ChartRange) => void;
+  movingAverageVisibility?: MovingAverageVisibility;
+  onMovingAverageToggle?: (key: MovingAverageKey) => void;
   onExpand?: () => void;
   isExpanded?: boolean;
 }) {
@@ -164,17 +196,29 @@ export function ChartPanel({
     <div className="flex flex-col h-full bg-white dark:bg-[#161B22] overflow-hidden transition-colors">
       {toolbar}
 
-      {/* Legend */}
-      <div className="px-4 py-2 flex items-center gap-6 text-[10px] font-mono border-b border-slate-200 dark:border-[#30363D]/50 bg-slate-50 dark:bg-[#0B0E14]">
-        <div className="flex gap-2 text-blue-500 dark:text-blue-400">
-          <span>MA(20)</span> <span>{formatNumber(lastPoint?.ma20)}</span>
-        </div>
-        <div className="flex gap-2 text-orange-500 dark:text-orange-400">
-          <span>MA(50)</span> <span>{formatNumber(lastPoint?.ma50)}</span>
-        </div>
-        <div className="flex gap-2 text-purple-500 dark:text-purple-400">
-          <span>MA(200)</span> <span>{formatNumber(lastPoint?.ma200)}</span>
-        </div>
+      <div className="px-4 py-2 flex items-center gap-2 text-[10px] font-mono border-b border-slate-200 dark:border-[#30363D]/50 bg-slate-50 dark:bg-[#0B0E14]">
+        {movingAverageItems.map((item) => {
+          const isVisible = movingAverageVisibility[item.key];
+
+          return (
+            <button
+              key={item.key}
+              type="button"
+              aria-pressed={isVisible}
+              title={`${isVisible ? "Hide" : "Show"} ${item.label}`}
+              onClick={() => onMovingAverageToggle?.(item.key)}
+              className={cn(
+                "flex items-center gap-2 rounded border px-2 py-1 font-bold transition-colors",
+                isVisible
+                  ? item.activeClassName
+                  : "border-slate-200 bg-white text-slate-400 hover:border-slate-300 hover:text-slate-600 dark:border-[#30363D] dark:bg-[#11141A] dark:text-slate-500 dark:hover:text-slate-300",
+              )}
+            >
+              <span>{item.label}</span>
+              <span>{formatNumber(lastPoint?.[item.key])}</span>
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-none custom-scrollbar pb-4">
@@ -235,30 +279,19 @@ export function ChartPanel({
                 )}
                 isAnimationActive={false}
               />
-              <Line
-                type="basis"
-                dataKey="ma20"
-                stroke="#3b82f6"
-                strokeWidth={1.5}
-                dot={false}
-                isAnimationActive={false}
-              />
-              <Line
-                type="basis"
-                dataKey="ma50"
-                stroke="#f97316"
-                strokeWidth={1.5}
-                dot={false}
-                isAnimationActive={false}
-              />
-              <Line
-                type="basis"
-                dataKey="ma200"
-                stroke="#a855f7"
-                strokeWidth={1.5}
-                dot={false}
-                isAnimationActive={false}
-              />
+              {movingAverageItems.map((item) => (
+                movingAverageVisibility[item.key] ? (
+                  <Line
+                    key={item.key}
+                    type="basis"
+                    dataKey={item.key}
+                    stroke={item.stroke}
+                    strokeWidth={1.5}
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+                ) : null
+              ))}
               <ReferenceLine
                 y={hasNumber(info?.price) ? info.price : undefined}
                 stroke="#10B981"
